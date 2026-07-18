@@ -51,7 +51,8 @@ API: http://localhost:18080 · H2 console: http://localhost:18080/h2-console
 2. Auth (register / login / JWT) ✅  
 3. Multi-wedding tenancy ✅  
 4. App shell (dashboard / weddings) ✅  
-5. **Next:** checklist tasks (A-10 / A-11), then crew  
+5. **Landing + shadcn app shell** ✅  
+6. **Next:** checklist tasks API (A-10 / A-11), then crew  
 
 **Rate assumption:** LKR 5,000 / day  
 **Model:** Vibecode (prompt + review)
