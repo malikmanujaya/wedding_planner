@@ -16,6 +16,24 @@ export type Wedding = {
   membershipRole: string;
 };
 
+export type WeddingMember = {
+  userId: number;
+  fullName: string;
+  email: string;
+  role: string;
+};
+
+export type ChecklistTask = {
+  id: number;
+  weddingId: number;
+  title: string;
+  notes: string | null;
+  status: "TODO" | "IN_PROGRESS" | "DONE";
+  dueDate: string | null;
+  assigneeUserId: number | null;
+  assigneeName: string | null;
+};
+
 type ApiError = {
   error?: string;
   message?: string;
@@ -117,6 +135,48 @@ export const api = {
     return request<Wedding>("/api/weddings", {
       method: "POST",
       body: JSON.stringify(payload),
+    });
+  },
+  listMembers(weddingId: number) {
+    return request<WeddingMember[]>(`/api/weddings/${weddingId}/members`);
+  },
+  listTasks(weddingId: number) {
+    return request<ChecklistTask[]>(`/api/weddings/${weddingId}/tasks`);
+  },
+  createTask(
+    weddingId: number,
+    payload: {
+      title: string;
+      notes?: string;
+      status: ChecklistTask["status"];
+      dueDate?: string;
+      assigneeUserId?: number | null;
+    }
+  ) {
+    return request<ChecklistTask>(`/api/weddings/${weddingId}/tasks`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  updateTask(
+    weddingId: number,
+    taskId: number,
+    payload: {
+      title: string;
+      notes?: string;
+      status: ChecklistTask["status"];
+      dueDate?: string;
+      assigneeUserId?: number | null;
+    }
+  ) {
+    return request<ChecklistTask>(`/api/weddings/${weddingId}/tasks/${taskId}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  },
+  deleteTask(weddingId: number, taskId: number) {
+    return request<void>(`/api/weddings/${weddingId}/tasks/${taskId}`, {
+      method: "DELETE",
     });
   },
 };

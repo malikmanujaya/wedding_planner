@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import lk.weddingplanner.api.security.UserPrincipal;
 import lk.weddingplanner.api.wedding.dto.CreateWeddingRequest;
+import lk.weddingplanner.api.wedding.dto.WeddingMemberResponse;
 import lk.weddingplanner.api.wedding.dto.WeddingResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -37,5 +38,11 @@ public class WeddingController {
     public WeddingResponse get(
             @AuthenticationPrincipal UserPrincipal principal, @PathVariable Long id) {
         return weddingService.getForMember(principal, id);
+    }
+
+    @GetMapping("/{id}/members")
+    public List<WeddingMemberResponse> members(
+            @AuthenticationPrincipal UserPrincipal principal, @PathVariable Long id) {
+        return weddingService.listMembers(principal, id);
     }
 }

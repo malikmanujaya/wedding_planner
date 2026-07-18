@@ -48,8 +48,8 @@ Say in chat: `start A-11` / `done B-03` to update.
 
 | ID | Task | Owner | Sprint | Days | Status |
 |----|------|-------|--------|-----:|--------|
-| A-10 | BE: checklist / task entity, CRUD, filters, assignee | Cursor | S1 | 0.5 | pending |
-| A-11 | FE: task list UI — status, due date, assignee, filters | Cursor | S1 | 1 | pending |
+| A-10 | BE: checklist / task entity, CRUD, filters, assignee | Cursor | S1 | 0.5 | done |
+| A-11 | FE: task list UI — status, due date, assignee, filters | Cursor | S1 | 1 | done |
 | A-12 | Seed default wedding checklist templates (optional) | Cursor | S1 | 0.5 | pending |
 
 ### Crew

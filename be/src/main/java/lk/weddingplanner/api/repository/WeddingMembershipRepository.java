@@ -19,4 +19,12 @@ public interface WeddingMembershipRepository extends JpaRepository<WeddingMember
     Optional<WeddingMembership> findByWeddingIdAndUserId(Long weddingId, Long userId);
 
     boolean existsByWeddingIdAndUserId(Long weddingId, Long userId);
+
+    @Query("""
+            select m from WeddingMembership m
+            join fetch m.user
+            where m.wedding.id = :weddingId
+            order by m.createdAt asc
+            """)
+    List<WeddingMembership> findAllByWeddingIdWithUser(Long weddingId);
 }

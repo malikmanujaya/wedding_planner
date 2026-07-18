@@ -14,6 +14,7 @@ import lk.weddingplanner.api.repository.WeddingMembershipRepository;
 import lk.weddingplanner.api.repository.WeddingRepository;
 import lk.weddingplanner.api.security.UserPrincipal;
 import lk.weddingplanner.api.wedding.dto.CreateWeddingRequest;
+import lk.weddingplanner.api.wedding.dto.WeddingMemberResponse;
 import lk.weddingplanner.api.wedding.dto.WeddingResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -73,6 +74,23 @@ public class WeddingService {
                         .findByWeddingIdAndUserId(weddingId, principal.getId())
                         .orElseThrow(() -> new ApiException("Wedding not found", HttpStatus.NOT_FOUND));
         return toResponse(membership);
+    }
+
+    @Transactional(readOnly = true)
+    public List<WeddingMemberResponse> listMembers(UserPrincipal principal, Long weddingId) {
+        membershipRepository
+                .findByWeddingIdAndUserId(weddingId, principal.getId())
+                .orElseThrow(() -> new ApiException("Wedding not found", HttpStatus.NOT_FOUND));
+
+        return membershipRepository.findAllByWeddingIdWithUser(weddingId).stream()
+                .map(
+                        m ->
+                                new WeddingMemberResponse(
+                                        m.getUser().getId(),
+                                        m.getUser().getFullName(),
+                                        m.getUser().getEmail(),
+                                        m.getRole().name()))
+                .toList();
     }
 
     private String resolveSlug(CreateWeddingRequest request) {
