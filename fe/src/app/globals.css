@@ -1,32 +1,44 @@
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Source+Sans+3:wght@400;500;600&display=swap");
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --bg: #f3efe6;
-  --surface: #fffdf8;
-  --ink: #1f2a24;
-  --ink-muted: #5c6b62;
-  --accent: #2f6f5e;
-  --accent-soft: #d8ebe3;
-  --line: #d9d2c4;
-  --danger: #9b3b2f;
-  --font-display: "Fraunces", Georgia, serif;
-  --font-body: "Source Sans 3", system-ui, sans-serif;
-}
+@layer base {
+  :root {
+    /* Deep botanical green — not purple, not cream/terracotta */
+    --background: 150 18% 97%;
+    --foreground: 160 22% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 160 22% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 160 22% 12%;
+    --primary: 162 42% 28%;
+    --primary-foreground: 150 30% 98%;
+    --secondary: 150 14% 93%;
+    --secondary-foreground: 160 18% 20%;
+    --muted: 150 12% 93%;
+    --muted-foreground: 160 8% 42%;
+    --accent: 162 28% 90%;
+    --accent-foreground: 162 42% 22%;
+    --destructive: 4 62% 42%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 150 12% 86%;
+    --input: 150 12% 86%;
+    --ring: 162 42% 28%;
+    --radius: 0.65rem;
+    --sidebar: 160 20% 10%;
+    --sidebar-foreground: 150 18% 92%;
+    --sidebar-border: 160 14% 18%;
+    --sidebar-accent: 162 28% 18%;
+    --sidebar-accent-foreground: 150 30% 96%;
+    --font-display: "Fraunces", Georgia, serif;
+    --font-body: "Source Sans 3", system-ui, sans-serif;
+  }
 
-body {
-  color: var(--ink);
-  background: var(--bg);
-  font-family: var(--font-body);
-  background-image:
-    radial-gradient(circle at top left, rgba(47, 111, 94, 0.08), transparent 40%),
-    radial-gradient(circle at bottom right, rgba(31, 42, 36, 0.05), transparent 35%);
-  min-height: 100vh;
-}
+  * {
+    @apply border-border;
+  }
 
-* {
-  box-sizing: border-box;
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
 }

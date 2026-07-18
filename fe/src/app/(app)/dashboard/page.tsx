@@ -2,14 +2,31 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { api, getActiveWeddingId, getStoredUser, setActiveWeddingId, Wedding } from "@/lib/api";
+import {
+  api,
+  getActiveWeddingId,
+  getStoredUser,
+  setActiveWeddingId,
+  type Wedding,
+} from "@/lib/api";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default function DashboardPage() {
   const [weddings, setWeddings] = useState<Wedding[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const user = typeof window !== "undefined" ? getStoredUser() : null;
+  const [userName, setUserName] = useState<string>("");
 
   useEffect(() => {
+    const user = getStoredUser();
+    if (user) setUserName(user.fullName.split(" ")[0] ?? "");
     api
       .listWeddings()
       .then((list) => {
@@ -25,65 +42,63 @@ export default function DashboardPage() {
   const active = weddings.find((w) => w.id === activeId) ?? weddings[0];
 
   return (
-    <div className="space-y-8">
+    <div className="mx-auto max-w-6xl space-y-8">
       <div>
-        <h1 className="font-[family-name:var(--font-display)] text-3xl">
-          Hello{user ? `, ${user.fullName.split(" ")[0]}` : ""}
+        <h1 className="font-display text-3xl tracking-tight">
+          Hello{userName ? `, ${userName}` : ""}
         </h1>
-        <p className="mt-1 text-[var(--ink-muted)]">
-          Foundation is live — auth, weddings, and the app shell.
+        <p className="mt-1 text-muted-foreground">
+          Your planning hub — pick up where you left off.
         </p>
       </div>
 
-      {error && <p className="text-sm text-[var(--danger)]">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
       {active ? (
-        <section className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-6">
-          <p className="text-xs uppercase tracking-wide text-[var(--ink-muted)]">
-            Active wedding
-          </p>
-          <h2 className="mt-1 font-[family-name:var(--font-display)] text-2xl">
-            {active.title}
-          </h2>
-          <p className="mt-2 text-sm text-[var(--ink-muted)]">
-            /{active.slug}
-            {active.weddingDate ? ` · ${active.weddingDate}` : ""}
-            {active.venue ? ` · ${active.venue}` : ""}
-            {" · "}
-            {active.membershipRole}
-          </p>
-        </section>
+        <Card>
+          <CardHeader>
+            <CardDescription>Active wedding</CardDescription>
+            <CardTitle>{active.title}</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            <Badge variant="success">{active.membershipRole}</Badge>
+            <span>/{active.slug}</span>
+            {active.weddingDate && <span>· {active.weddingDate}</span>}
+            {active.venue && <span>· {active.venue}</span>}
+          </CardContent>
+        </Card>
       ) : (
-        <section className="rounded-2xl border border-dashed border-[var(--line)] bg-[var(--surface)] p-6">
-          <h2 className="font-[family-name:var(--font-display)] text-xl">No wedding yet</h2>
-          <p className="mt-2 text-sm text-[var(--ink-muted)]">
-            Create your first wedding to unlock checklist, guests, and crew.
-          </p>
-          <Link
-            href="/weddings"
-            className="mt-4 inline-block rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white"
-          >
-            Create wedding
-          </Link>
-        </section>
+        <Card className="border-dashed">
+          <CardHeader>
+            <CardTitle>No wedding yet</CardTitle>
+            <CardDescription>
+              Create your first wedding to unlock checklist, guests, and crew.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild>
+              <Link href="/weddings">Create wedding</Link>
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
-      <section className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-3">
         {[
-          { title: "Tasks", href: "/tasks", note: "Next up in S1" },
-          { title: "Guests", href: "/weddings", note: "Coming in S2" },
-          { title: "Crew", href: "/weddings", note: "Coming in S1" },
-        ].map((card) => (
+          { title: "Tasks", href: "/tasks", note: "Checklist coming next in S1" },
+          { title: "Guests", href: "/guests", note: "Guest list UI ready for S2" },
+          { title: "Weddings", href: "/weddings", note: "Switch or create weddings" },
+        ].map((item) => (
           <Link
-            key={card.title}
-            href={card.href}
-            className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 transition hover:border-[var(--accent)]"
+            key={item.title}
+            href={item.href}
+            className="rounded-xl border bg-card p-5 transition hover:border-primary/40"
           >
-            <h3 className="font-medium">{card.title}</h3>
-            <p className="mt-1 text-sm text-[var(--ink-muted)]">{card.note}</p>
+            <h3 className="font-medium">{item.title}</h3>
+            <p className="mt-1 text-sm text-muted-foreground">{item.note}</p>
           </Link>
         ))}
-      </section>
+      </div>
     </div>
   );
 }
