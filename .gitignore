@@ -19,3 +19,8 @@ fe/.env*.local
 # Env secrets
 .env
 .env.local
+fe/.env*.local
+
+# Keep example env tracked
+!fe/.env.example
+
