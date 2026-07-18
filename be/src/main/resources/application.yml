@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: wedding-planner-api
+  datasource:
+    url: jdbc:h2:file:./data/weddingdb;DB_CLOSE_DELAY=-1;AUTO_SERVER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 18080
+
+app:
+  jwt:
+    secret: "wedding-planner-dev-secret-change-me-in-production-32chars-min"
+    expiration-ms: 86400000
+  cors:
+    allowed-origins: "http://localhost:3000"
+
+logging:
+  level:
+    org.springframework.security: INFO

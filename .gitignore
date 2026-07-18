@@ -1,0 +1,21 @@
+# Root
+.DS_Store
+*.log
+.idea/
+.vscode/
+*.iml
+
+# Backend
+be/target/
+be/data/
+be/.mvn/wrapper/maven-wrapper.jar
+
+# Frontend
+fe/node_modules/
+fe/.next/
+fe/out/
+fe/.env*.local
+
+# Env secrets
+.env
+.env.local
