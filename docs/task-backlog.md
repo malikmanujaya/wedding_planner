@@ -72,8 +72,8 @@ Say in chat: `start A-11` / `done B-03` to update.
 
 | ID | Task | Owner | Sprint | Days | Status |
 |----|------|-------|--------|-----:|--------|
-| A-40 | BE: wedding-scoped vendors (DJ/Band/Ashtaka/etc.) | Cursor | S2 | 0.5 | pending |
-| A-41 | FE: vendor list + contact + notes + category | Cursor | S2 | 1 | pending |
+| A-40 | BE: wedding-scoped vendors (DJ/Band/Ashtaka/etc.) | Cursor | S2 | 0.5 | done |
+| A-41 | FE: vendor list + contact + notes + category | Cursor | S2 | 1 | done |
 | A-42 | Pkg A demo / UAT checklist with client | You | S2 | 0.5 | pending |
 
 ---

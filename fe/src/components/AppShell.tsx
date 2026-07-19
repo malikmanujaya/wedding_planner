@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  Store,
   Users,
   UsersRound,
   Heart,
@@ -34,6 +35,7 @@ const nav = [
   { href: "/tasks", label: "Tasks", icon: CheckSquare },
   { href: "/crew", label: "Crew", icon: UsersRound },
   { href: "/guests", label: "Guests", icon: Users },
+  { href: "/vendors", label: "Vendors", icon: Store },
 ];
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {

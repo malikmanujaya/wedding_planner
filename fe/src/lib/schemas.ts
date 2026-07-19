@@ -49,6 +49,33 @@ export const guestSchema = z.object({
   notes: z.string().max(500).optional().or(z.literal("")),
 });
 
+export const vendorSchema = z.object({
+  name: z.string().min(2, "Name is required"),
+  category: z.enum([
+    "DJ",
+    "BAND",
+    "ASHTAKA",
+    "PHOTOGRAPHER",
+    "VIDEOGRAPHER",
+    "CATERER",
+    "FLORIST",
+    "DECORATOR",
+    "MAKEUP",
+    "TRANSPORT",
+    "VENUE",
+    "OTHER",
+  ]),
+  status: z.enum(["PENDING", "CONTACTED", "BOOKED", "CONFIRMED", "CANCELLED"]),
+  contactName: z.string().max(120).optional().or(z.literal("")),
+  email: z.string().email("Invalid email").optional().or(z.literal("")),
+  phone: z.string().max(40).optional().or(z.literal("")),
+  quotedAmount: z.string().optional().or(z.literal("")),
+  advanceAmount: z.string().optional().or(z.literal("")),
+  advanceDueDate: z.string().optional().or(z.literal("")),
+  remainingDueDate: z.string().optional().or(z.literal("")),
+  notes: z.string().max(1000).optional().or(z.literal("")),
+});
+
 export type LoginValues = z.infer<typeof loginSchema>;
 export type RegisterValues = z.infer<typeof registerSchema>;
 export type CreateWeddingValues = z.infer<typeof createWeddingSchema>;
@@ -56,3 +83,4 @@ export type TaskFormValues = z.infer<typeof taskSchema>;
 export type InviteCrewValues = z.infer<typeof inviteCrewSchema>;
 export type UpdateCrewValues = z.infer<typeof updateCrewSchema>;
 export type GuestFormValues = z.infer<typeof guestSchema>;
+export type VendorFormValues = z.infer<typeof vendorSchema>;

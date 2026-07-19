@@ -51,6 +51,45 @@ export type Guest = {
   notes: string | null;
 };
 
+export type VendorPayment = {
+  id: number;
+  label: string;
+  amount: number;
+  dueDate: string | null;
+  paidDate: string | null;
+  status: "PENDING" | "PAID" | "OVERDUE";
+};
+
+export type WeddingVendor = {
+  id: number;
+  weddingId: number;
+  name: string;
+  category:
+    | "DJ"
+    | "BAND"
+    | "ASHTAKA"
+    | "PHOTOGRAPHER"
+    | "VIDEOGRAPHER"
+    | "CATERER"
+    | "FLORIST"
+    | "DECORATOR"
+    | "MAKEUP"
+    | "TRANSPORT"
+    | "VENUE"
+    | "OTHER";
+  status: "PENDING" | "CONTACTED" | "BOOKED" | "CONFIRMED" | "CANCELLED";
+  contactName: string | null;
+  email: string | null;
+  phone: string | null;
+  quotedAmount: number | null;
+  advanceAmount: number | null;
+  totalPaid: number | null;
+  remainingAmount: number | null;
+  nextDueDate: string | null;
+  notes: string | null;
+  payments: VendorPayment[];
+};
+
 type ApiError = {
   error?: string;
   message?: string;
@@ -326,5 +365,74 @@ export const api = {
       throw new Error(message);
     }
     return (await res.json()) as { imported: number; skipped: number; message: string };
+  },
+  listVendors(weddingId: number, params?: { category?: string; q?: string }) {
+    const search = new URLSearchParams();
+    if (params?.category) search.set("category", params.category);
+    if (params?.q) search.set("q", params.q);
+    const qs = search.toString();
+    return request<WeddingVendor[]>(
+      `/api/weddings/${weddingId}/vendors${qs ? `?${qs}` : ""}`
+    );
+  },
+  createVendor(
+    weddingId: number,
+    payload: {
+      name: string;
+      category: WeddingVendor["category"];
+      status: WeddingVendor["status"];
+      contactName?: string;
+      email?: string;
+      phone?: string;
+      quotedAmount?: number | null;
+      advanceAmount?: number | null;
+      advanceDueDate?: string | null;
+      remainingDueDate?: string | null;
+      notes?: string;
+    }
+  ) {
+    return request<WeddingVendor>(`/api/weddings/${weddingId}/vendors`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  updateVendor(
+    weddingId: number,
+    vendorId: number,
+    payload: {
+      name: string;
+      category: WeddingVendor["category"];
+      status: WeddingVendor["status"];
+      contactName?: string;
+      email?: string;
+      phone?: string;
+      quotedAmount?: number | null;
+      advanceAmount?: number | null;
+      advanceDueDate?: string | null;
+      remainingDueDate?: string | null;
+      notes?: string;
+    }
+  ) {
+    return request<WeddingVendor>(`/api/weddings/${weddingId}/vendors/${vendorId}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  },
+  deleteVendor(weddingId: number, vendorId: number) {
+    return request<void>(`/api/weddings/${weddingId}/vendors/${vendorId}`, {
+      method: "DELETE",
+    });
+  },
+  markVendorPaymentPaid(weddingId: number, vendorId: number, paymentId: number) {
+    return request<VendorPayment>(
+      `/api/weddings/${weddingId}/vendors/${vendorId}/payments/${paymentId}/mark-paid`,
+      { method: "POST" }
+    );
+  },
+  markVendorPaymentPending(weddingId: number, vendorId: number, paymentId: number) {
+    return request<VendorPayment>(
+      `/api/weddings/${weddingId}/vendors/${vendorId}/payments/${paymentId}/mark-pending`,
+      { method: "POST" }
+    );
   },
 };
