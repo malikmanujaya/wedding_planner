@@ -27,4 +27,12 @@ public interface WeddingMembershipRepository extends JpaRepository<WeddingMember
             order by m.createdAt asc
             """)
     List<WeddingMembership> findAllByWeddingIdWithUser(Long weddingId);
+
+    @Query("""
+            select m from WeddingMembership m
+            join fetch m.user
+            join fetch m.wedding
+            where m.id = :id
+            """)
+    Optional<WeddingMembership> findByIdWithUser(Long id);
 }

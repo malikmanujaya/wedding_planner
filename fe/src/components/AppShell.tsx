@@ -10,6 +10,7 @@ import {
   LogOut,
   Menu,
   Users,
+  UsersRound,
   Heart,
 } from "lucide-react";
 import { clearAuth, getStoredUser } from "@/lib/api";
@@ -31,6 +32,7 @@ const nav = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/weddings", label: "Weddings", icon: Heart },
   { href: "/tasks", label: "Tasks", icon: CheckSquare },
+  { href: "/crew", label: "Crew", icon: UsersRound },
   { href: "/guests", label: "Guests", icon: Users },
 ];
 

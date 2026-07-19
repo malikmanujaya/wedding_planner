@@ -56,8 +56,8 @@ Say in chat: `start A-11` / `done B-03` to update.
 
 | ID | Task | Owner | Sprint | Days | Status |
 |----|------|-------|--------|-----:|--------|
-| A-20 | BE: crew members + responsibilities + invite link | Cursor | S1 | 0.5 | pending |
-| A-21 | FE: crew management UI + responsibility assignment | Cursor | S1 | 1 | pending |
+| A-20 | BE: crew members + responsibilities + invite link | Cursor | S1 | 0.5 | done |
+| A-21 | FE: crew management UI + responsibility assignment | Cursor | S1 | 1 | done |
 
 ### Guests
 

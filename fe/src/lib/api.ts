@@ -13,14 +13,17 @@ export type Wedding = {
   slug: string;
   weddingDate: string | null;
   venue: string | null;
+  inviteCode: string | null;
   membershipRole: string;
 };
 
 export type WeddingMember = {
+  membershipId: number;
   userId: number;
   fullName: string;
   email: string;
   role: string;
+  responsibilities: string | null;
 };
 
 export type ChecklistTask = {
@@ -139,6 +142,45 @@ export const api = {
   },
   listMembers(weddingId: number) {
     return request<WeddingMember[]>(`/api/weddings/${weddingId}/members`);
+  },
+  listCrew(weddingId: number) {
+    return request<WeddingMember[]>(`/api/weddings/${weddingId}/crew`);
+  },
+  inviteCrew(
+    weddingId: number,
+    payload: {
+      email: string;
+      fullName?: string;
+      role: "COUPLE" | "CREW" | "VENDOR";
+      responsibilities?: string;
+    }
+  ) {
+    return request<{
+      member: WeddingMember;
+      createdNewUser: boolean;
+      tempPassword: string | null;
+    }>(`/api/weddings/${weddingId}/crew`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  updateCrew(
+    weddingId: number,
+    membershipId: number,
+    payload: { role: string; responsibilities?: string }
+  ) {
+    return request<WeddingMember>(
+      `/api/weddings/${weddingId}/crew/${membershipId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      }
+    );
+  },
+  removeCrew(weddingId: number, membershipId: number) {
+    return request<void>(`/api/weddings/${weddingId}/crew/${membershipId}`, {
+      method: "DELETE",
+    });
   },
   listTasks(weddingId: number) {
     return request<ChecklistTask[]>(`/api/weddings/${weddingId}/tasks`);

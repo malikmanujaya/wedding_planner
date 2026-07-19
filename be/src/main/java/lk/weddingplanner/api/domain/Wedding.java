@@ -34,6 +34,9 @@ public class Wedding {
     @Column(length = 255)
     private String venue;
 
+    @Column(unique = true, length = 40)
+    private String inviteCode;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 }

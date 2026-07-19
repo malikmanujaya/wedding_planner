@@ -32,7 +32,7 @@ public class WeddingService {
     private final WeddingMembershipRepository membershipRepository;
     private final UserRepository userRepository;
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<WeddingResponse> listMine(UserPrincipal principal) {
         return membershipRepository.findAllByUserIdWithWedding(principal.getId()).stream()
                 .map(this::toResponse)
@@ -56,6 +56,7 @@ public class WeddingService {
         wedding.setSlug(slug);
         wedding.setWeddingDate(request.weddingDate());
         wedding.setVenue(request.venue() != null ? request.venue().trim() : null);
+        wedding.setInviteCode(lk.weddingplanner.api.crew.CrewService.newInviteCode());
         weddingRepository.save(wedding);
 
         WeddingMembership membership = new WeddingMembership();
@@ -67,7 +68,7 @@ public class WeddingService {
         return toResponse(membership);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public WeddingResponse getForMember(UserPrincipal principal, Long weddingId) {
         WeddingMembership membership =
                 membershipRepository
@@ -86,10 +87,12 @@ public class WeddingService {
                 .map(
                         m ->
                                 new WeddingMemberResponse(
+                                        m.getId(),
                                         m.getUser().getId(),
                                         m.getUser().getFullName(),
                                         m.getUser().getEmail(),
-                                        m.getRole().name()))
+                                        m.getRole().name(),
+                                        m.getResponsibilities()))
                 .toList();
     }
 
@@ -118,12 +121,17 @@ public class WeddingService {
 
     private WeddingResponse toResponse(WeddingMembership membership) {
         Wedding wedding = membership.getWedding();
+        if (wedding.getInviteCode() == null || wedding.getInviteCode().isBlank()) {
+            wedding.setInviteCode(lk.weddingplanner.api.crew.CrewService.newInviteCode());
+            weddingRepository.save(wedding);
+        }
         return new WeddingResponse(
                 wedding.getId(),
                 wedding.getTitle(),
                 wedding.getSlug(),
                 wedding.getWeddingDate(),
                 wedding.getVenue(),
+                wedding.getInviteCode(),
                 membership.getRole().name());
     }
 }

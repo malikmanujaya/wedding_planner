@@ -42,6 +42,9 @@ public class WeddingMembership {
     @Column(nullable = false, length = 20)
     private MembershipRole role;
 
+    @Column(length = 500)
+    private String responsibilities;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 }

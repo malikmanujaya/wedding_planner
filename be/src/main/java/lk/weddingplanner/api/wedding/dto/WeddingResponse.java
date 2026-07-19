@@ -8,4 +8,5 @@ public record WeddingResponse(
         String slug,
         LocalDate weddingDate,
         String venue,
+        String inviteCode,
         String membershipRole) {}
