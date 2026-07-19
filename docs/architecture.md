@@ -61,7 +61,7 @@ React Native ────────────────────┘
 
 | Decision | Options | Owner task |
 |----------|---------|------------|
-| Seating canvas lib | Konva vs Fabric | `B-01` |
+| Seating canvas lib | **Konva + react-konva** (chosen) | `B-01` done |
 | WA BSP provider | Meta Cloud API / local BSP | `B-30` |
 | Video | Stream/Mux vs MP4-only v1 | `C-12` |
 | Auth style | JWT vs cookie session | `A-03` |

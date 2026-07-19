@@ -84,12 +84,12 @@ Say in chat: `start A-11` / `done B-03` to update.
 
 | ID | Task | Owner | Sprint | Days | Status |
 |----|------|-------|--------|-----:|--------|
-| B-01 | Pick canvas lib (Konva/Fabric) + floor-plan data model | You | S3 | 0.5 | pending |
-| B-02 | BE: seating plan JSON save/load + version | Cursor | S3 | 0.5 | pending |
-| B-03 | FE: canvas — add/move/resize tables (round/rect) | Cursor | S3 | 3 | pending |
-| B-04 | FE: table shapes library + labels + capacity | Cursor | S3 | 1.5 | pending |
-| B-05 | FE: assign guests to seats/tables + unassigned panel | Cursor | S4 | 2 | pending |
-| B-06 | Conflict checks: double-seat, over-capacity | Cursor | S4 | 0.5 | pending |
+| B-01 | Pick canvas lib (Konva/Fabric) + floor-plan data model | You | S3 | 0.5 | done |
+| B-02 | BE: seating plan JSON save/load + version | Cursor | S3 | 0.5 | done |
+| B-03 | FE: canvas — add/move/resize tables (round/rect) | Cursor | S3 | 3 | done |
+| B-04 | FE: table shapes library + labels + capacity | Cursor | S3 | 1.5 | done |
+| B-05 | FE: assign guests to seats/tables + unassigned panel | Cursor | S4 | 2 | done |
+| B-06 | Conflict checks: double-seat, over-capacity | Cursor | S4 | 0.5 | done |
 | B-07 | Export seating snapshot (PNG/PDF optional) | Cursor | S4 | 1 | pending |
 
 ### Invitation + QR

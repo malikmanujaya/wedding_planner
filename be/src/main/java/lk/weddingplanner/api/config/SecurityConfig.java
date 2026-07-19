@@ -1,5 +1,6 @@
 package lk.weddingplanner.api.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import java.util.List;
 import lk.weddingplanner.api.security.JwtAuthFilter;
@@ -44,7 +45,10 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(
                         auth ->
-                                auth.requestMatchers("/api/auth/register", "/api/auth/login")
+                                auth.requestMatchers(
+                                                "/api/auth/register",
+                                                "/api/auth/login",
+                                                "/api/auth/refresh")
                                         .permitAll()
                                         .requestMatchers("/h2-console/**")
                                         .permitAll()
@@ -52,6 +56,15 @@ public class SecurityConfig {
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated())
+                .exceptionHandling(
+                        ex ->
+                                ex.authenticationEntryPoint(
+                                        (request, response, authException) -> {
+                                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                            response.setContentType("application/json");
+                                            response.getWriter()
+                                                    .write("{\"error\":\"Session expired. Please log in again.\"}");
+                                        }))
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

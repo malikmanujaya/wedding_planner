@@ -13,6 +13,7 @@ import {
   type WeddingMember,
 } from "@/lib/api";
 import { taskSchema, type TaskFormValues } from "@/lib/schemas";
+import { toast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -112,7 +113,11 @@ export default function TasksPage() {
     }
     setWeddingId(id);
     load(id)
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load"))
+      .catch((err) => {
+        const msg = err instanceof Error ? err.message : "Failed to load";
+        setError(msg);
+        toast.error(msg);
+      })
       .finally(() => setLoading(false));
   }, [load]);
 
@@ -152,8 +157,11 @@ export default function TasksPage() {
       }
       setDialogOpen(false);
       await load(weddingId);
+      toast.success(editing ? "Task updated" : "Task added");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed");
+      const msg = err instanceof Error ? err.message : "Save failed";
+      setError(msg);
+      toast.error(msg);
     }
   }
 
@@ -164,8 +172,11 @@ export default function TasksPage() {
     try {
       await api.deleteTask(weddingId, task.id);
       await load(weddingId);
+      toast.success("Task deleted");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Delete failed");
+      const msg = err instanceof Error ? err.message : "Delete failed";
+      setError(msg);
+      toast.error(msg);
     }
   }
 

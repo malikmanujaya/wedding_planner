@@ -28,7 +28,8 @@ server:
 app:
   jwt:
     secret: "wedding-planner-dev-secret-change-me-in-production-32chars-min"
-    expiration-ms: 86400000
+    access-expiration-ms: 900000
+    refresh-expiration-ms: 604800000
   cors:
     allowed-origins: "http://localhost:3000"
 

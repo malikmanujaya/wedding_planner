@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { api, setActiveWeddingId, type Wedding } from "@/lib/api";
 import { createWeddingSchema, type CreateWeddingValues } from "@/lib/schemas";
+import { toast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,7 +47,11 @@ export default function WeddingsPage() {
   }
 
   useEffect(() => {
-    load().catch((err) => setError(err instanceof Error ? err.message : "Failed"));
+    load().catch((err) => {
+      const msg = err instanceof Error ? err.message : "Failed";
+      setError(msg);
+      toast.error(msg);
+    });
   }, []);
 
   async function onCreate(values: CreateWeddingValues) {
@@ -60,8 +65,11 @@ export default function WeddingsPage() {
       setActiveWeddingId(created.id);
       form.reset({ title: "", weddingDate: "", venue: "" });
       await load();
+      toast.success("Wedding created");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Create failed");
+      const msg = err instanceof Error ? err.message : "Create failed";
+      setError(msg);
+      toast.error(msg);
     }
   }
 
@@ -170,7 +178,10 @@ export default function WeddingsPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => setActiveWeddingId(w.id)}
+                      onClick={() => {
+                        setActiveWeddingId(w.id);
+                        toast.success(`Active wedding: ${w.title}`);
+                      }}
                     >
                       Set active
                     </Button>

@@ -13,9 +13,11 @@ import {
   Users,
   UsersRound,
   Heart,
+  Armchair,
 } from "lucide-react";
-import { clearAuth, getStoredUser } from "@/lib/api";
+import { api, getStoredUser, startAuthSession } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { Toaster } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -35,6 +37,7 @@ const nav = [
   { href: "/tasks", label: "Tasks", icon: CheckSquare },
   { href: "/crew", label: "Crew", icon: UsersRound },
   { href: "/guests", label: "Guests", icon: Users },
+  { href: "/seating", label: "Seating", icon: Armchair },
   { href: "/vendors", label: "Vendors", icon: Store },
 ];
 
@@ -110,10 +113,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
     setName(user.fullName);
     setEmail(user.email);
+    startAuthSession();
   }, [router]);
 
-  function logout() {
-    clearAuth();
+  async function logout() {
+    await api.logout();
     router.replace("/login");
   }
 
@@ -134,6 +138,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-background">
+      <Toaster />
       <aside className="hidden w-64 shrink-0 border-r border-sidebar-border bg-sidebar md:block">
         <SidebarBody />
       </aside>

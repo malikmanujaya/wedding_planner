@@ -1,12 +1,5 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:18080";
 
-export type AuthUser = {
-  userId: number;
-  email: string;
-  fullName: string;
-  token: string;
-};
-
 export type Wedding = {
   id: number;
   title: string;
@@ -90,19 +83,77 @@ export type WeddingVendor = {
   payments: VendorPayment[];
 };
 
+export type AuthUser = {
+  userId: number;
+  email: string;
+  fullName: string;
+  token: string;
+  refreshToken: string;
+  expiresIn: number;
+};
+
 type ApiError = {
   error?: string;
   message?: string;
   fields?: Record<string, string>;
 };
 
+type QueueItem = {
+  resolve: (token: string) => void;
+  reject: (err: unknown) => void;
+};
+
+const ACCESS_REFRESH_BUFFER_MS = 60_000; // refresh 1 min before expiry (14 of 15)
+
+let refreshPromise: Promise<string> | null = null;
+let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+const waitQueue: QueueItem[] = [];
+
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("wp_token");
 }
 
+function getRefreshToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("wp_refresh_token");
+}
+
+function getExpiresAt(): number | null {
+  if (typeof window === "undefined") return null;
+  const raw = localStorage.getItem("wp_token_expires_at");
+  return raw ? Number(raw) : null;
+}
+
+function flushQueue(error: unknown, token: string | null) {
+  const pending = waitQueue.splice(0, waitQueue.length);
+  for (const item of pending) {
+    if (error || !token) item.reject(error ?? new Error("Session expired"));
+    else item.resolve(token);
+  }
+}
+
+function scheduleProactiveRefresh() {
+  if (typeof window === "undefined") return;
+  if (refreshTimer) {
+    clearTimeout(refreshTimer);
+    refreshTimer = null;
+  }
+  const expiresAt = getExpiresAt();
+  if (!expiresAt || !getRefreshToken()) return;
+  const delay = Math.max(5_000, expiresAt - Date.now() - ACCESS_REFRESH_BUFFER_MS);
+  refreshTimer = setTimeout(() => {
+    refreshAccessToken().catch(() => {
+      /* reactive path will handle next 401 */
+    });
+  }, delay);
+}
+
 export function saveAuth(auth: AuthUser) {
+  const expiresInSec = auth.expiresIn > 0 ? auth.expiresIn : 900;
   localStorage.setItem("wp_token", auth.token);
+  localStorage.setItem("wp_refresh_token", auth.refreshToken);
+  localStorage.setItem("wp_token_expires_at", String(Date.now() + expiresInSec * 1000));
   localStorage.setItem(
     "wp_user",
     JSON.stringify({
@@ -111,20 +162,27 @@ export function saveAuth(auth: AuthUser) {
       fullName: auth.fullName,
     })
   );
+  scheduleProactiveRefresh();
 }
 
 export function clearAuth() {
+  if (refreshTimer) {
+    clearTimeout(refreshTimer);
+    refreshTimer = null;
+  }
   localStorage.removeItem("wp_token");
+  localStorage.removeItem("wp_refresh_token");
+  localStorage.removeItem("wp_token_expires_at");
   localStorage.removeItem("wp_user");
   localStorage.removeItem("wp_active_wedding");
 }
 
-export function getStoredUser(): Omit<AuthUser, "token"> | null {
+export function getStoredUser(): Omit<AuthUser, "token" | "refreshToken" | "expiresIn"> | null {
   if (typeof window === "undefined") return null;
   const raw = localStorage.getItem("wp_user");
   if (!raw) return null;
   try {
-    return JSON.parse(raw) as Omit<AuthUser, "token">;
+    return JSON.parse(raw) as Omit<AuthUser, "token" | "refreshToken" | "expiresIn">;
   } catch {
     return null;
   }
@@ -140,13 +198,89 @@ export function getActiveWeddingId(): number | null {
   return raw ? Number(raw) : null;
 }
 
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+/** Call once after login / on app mount to keep access token fresh. */
+export function startAuthSession() {
+  scheduleProactiveRefresh();
+}
+
+async function refreshAccessToken(): Promise<string> {
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) {
+      throw new Error("No refresh token");
+    }
+    const res = await fetch(`${API_URL}/api/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+    });
+    if (!res.ok) {
+      clearAuth();
+      throw new Error("Session expired. Please log in again.");
+    }
+    const auth = (await res.json()) as AuthUser;
+    saveAuth(auth);
+    return auth.token;
+  })();
+
+  try {
+    const token = await refreshPromise;
+    flushQueue(null, token);
+    return token;
+  } catch (err) {
+    flushQueue(err, null);
+    throw err;
+  } finally {
+    refreshPromise = null;
+  }
+}
+
+function waitForRefresh(): Promise<string> {
+  if (refreshPromise) {
+    return new Promise((resolve, reject) => {
+      waitQueue.push({ resolve, reject });
+    });
+  }
+  return refreshAccessToken();
+}
+
+function isAuthPath(path: string) {
+  return (
+    path.startsWith("/api/auth/login") ||
+    path.startsWith("/api/auth/register") ||
+    path.startsWith("/api/auth/refresh")
+  );
+}
+
+async function request<T>(path: string, init: RequestInit = {}, retried = false): Promise<T> {
   const headers = new Headers(init.headers);
-  headers.set("Content-Type", "application/json");
+  if (!headers.has("Content-Type") && init.body) {
+    headers.set("Content-Type", "application/json");
+  }
   const token = getToken();
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
   const res = await fetch(`${API_URL}${path}`, { ...init, headers });
+
+  if ((res.status === 401 || res.status === 403) && !retried && !isAuthPath(path)) {
+    try {
+      const newToken = refreshPromise ? await waitForRefresh() : await refreshAccessToken();
+      const retryHeaders = new Headers(init.headers);
+      if (!retryHeaders.has("Content-Type") && init.body) {
+        retryHeaders.set("Content-Type", "application/json");
+      }
+      retryHeaders.set("Authorization", `Bearer ${newToken}`);
+      return request<T>(path, { ...init, headers: retryHeaders }, true);
+    } catch {
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
+      throw new Error("Session expired. Please log in again.");
+    }
+  }
+
   if (!res.ok) {
     let message = `Request failed (${res.status})`;
     try {
@@ -173,6 +307,19 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     });
+  },
+  async logout() {
+    const refreshToken = getRefreshToken();
+    try {
+      await request<void>("/api/auth/logout", {
+        method: "POST",
+        body: JSON.stringify({ refreshToken }),
+      });
+    } catch {
+      /* ignore network errors on logout */
+    } finally {
+      clearAuth();
+    }
   },
   me() {
     return request<{ id: number; email: string; fullName: string; globalRole: string }>(
@@ -434,5 +581,25 @@ export const api = {
       `/api/weddings/${weddingId}/vendors/${vendorId}/payments/${paymentId}/mark-pending`,
       { method: "POST" }
     );
+  },
+  getSeating(weddingId: number) {
+    return request<{
+      weddingId: number;
+      plan: unknown;
+      version: number;
+    }>(`/api/weddings/${weddingId}/seating`);
+  },
+  saveSeating(
+    weddingId: number,
+    payload: { plan: unknown; version: number }
+  ) {
+    return request<{
+      weddingId: number;
+      plan: unknown;
+      version: number;
+    }>(`/api/weddings/${weddingId}/seating`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
   },
 };

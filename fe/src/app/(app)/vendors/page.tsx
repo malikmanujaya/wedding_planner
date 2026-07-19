@@ -13,6 +13,7 @@ import {
   type WeddingVendor,
 } from "@/lib/api";
 import { vendorSchema, type VendorFormValues } from "@/lib/schemas";
+import { toast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -198,7 +199,11 @@ export default function VendorsPage() {
     }
     setWeddingId(id);
     load(id)
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load"))
+      .catch((err) => {
+        const msg = err instanceof Error ? err.message : "Failed to load";
+        setError(msg);
+        toast.error(msg);
+      })
       .finally(() => setLoading(false));
   }, [load]);
 
@@ -241,8 +246,11 @@ export default function VendorsPage() {
       else await api.createVendor(weddingId, payload);
       setDialogOpen(false);
       await load(weddingId);
+      toast.success(editing ? "Vendor updated" : "Vendor added");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed");
+      const msg = err instanceof Error ? err.message : "Save failed";
+      setError(msg);
+      toast.error(msg);
     }
   }
 
@@ -252,8 +260,11 @@ export default function VendorsPage() {
     try {
       await api.deleteVendor(weddingId, vendor.id);
       await load(weddingId);
+      toast.success("Vendor removed");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Delete failed");
+      const msg = err instanceof Error ? err.message : "Delete failed";
+      setError(msg);
+      toast.error(msg);
     }
   }
 
@@ -264,12 +275,16 @@ export default function VendorsPage() {
     try {
       if (payment.status === "PAID") {
         await api.markVendorPaymentPending(weddingId, paymentsVendor.id, payment.id);
+        toast.success("Payment marked pending");
       } else {
         await api.markVendorPaymentPaid(weddingId, paymentsVendor.id, payment.id);
+        toast.success("Payment marked paid");
       }
       await load(weddingId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Payment update failed");
+      const msg = err instanceof Error ? err.message : "Payment update failed";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setPaymentBusy(null);
     }

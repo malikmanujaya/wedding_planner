@@ -17,6 +17,7 @@ import {
   type InviteCrewValues,
   type UpdateCrewValues,
 } from "@/lib/schemas";
+import { toast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,7 +97,11 @@ export default function CrewPage() {
     }
     setWeddingId(id);
     load(id)
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load"))
+      .catch((err) => {
+        const msg = err instanceof Error ? err.message : "Failed to load";
+        setError(msg);
+        toast.error(msg);
+      })
       .finally(() => setLoading(false));
   }, [load]);
 
@@ -122,12 +127,16 @@ export default function CrewPage() {
         setInfo(
           `Invited ${result.member.fullName}. Temporary password: ${result.tempPassword}`
         );
+        toast.success(`Invited ${result.member.fullName} (temp password created)`);
       } else {
         setInfo(`Added ${result.member.fullName} to the crew.`);
+        toast.success(`Added ${result.member.fullName} to the crew`);
       }
       await load(weddingId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Invite failed");
+      const msg = err instanceof Error ? err.message : "Invite failed";
+      setError(msg);
+      toast.error(msg);
     }
   }
 
@@ -150,8 +159,11 @@ export default function CrewPage() {
       });
       setEditOpen(false);
       await load(weddingId);
+      toast.success("Crew member updated");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Update failed");
+      const msg = err instanceof Error ? err.message : "Update failed";
+      setError(msg);
+      toast.error(msg);
     }
   }
 
@@ -162,8 +174,11 @@ export default function CrewPage() {
     try {
       await api.removeCrew(weddingId, member.membershipId);
       await load(weddingId);
+      toast.success("Crew member removed");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Remove failed");
+      const msg = err instanceof Error ? err.message : "Remove failed";
+      setError(msg);
+      toast.error(msg);
     }
   }
 
@@ -172,6 +187,7 @@ export default function CrewPage() {
     const link = `${window.location.origin}/invite/${wedding.inviteCode}`;
     await navigator.clipboard.writeText(link);
     setInfo("Invite link copied to clipboard.");
+    toast.success("Invite link copied");
   }
 
   if (loading) {

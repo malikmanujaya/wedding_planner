@@ -12,6 +12,7 @@ import {
   type Wedding,
 } from "@/lib/api";
 import { guestSchema, type GuestFormValues } from "@/lib/schemas";
+import { toast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -126,7 +127,11 @@ export default function GuestsPage() {
     }
     setWeddingId(id);
     load(id)
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load"))
+      .catch((err) => {
+        const msg = err instanceof Error ? err.message : "Failed to load";
+        setError(msg);
+        toast.error(msg);
+      })
       .finally(() => setLoading(false));
   }, [load]);
 
@@ -168,8 +173,11 @@ export default function GuestsPage() {
       setDialogOpen(false);
       setSelected(new Set());
       await load(weddingId);
+      toast.success(editing ? "Guest updated" : "Guest added");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed");
+      const msg = err instanceof Error ? err.message : "Save failed";
+      setError(msg);
+      toast.error(msg);
     }
   }
 
@@ -179,8 +187,11 @@ export default function GuestsPage() {
     try {
       await api.deleteGuest(weddingId, guest.id);
       await load(weddingId);
+      toast.success("Guest deleted");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Delete failed");
+      const msg = err instanceof Error ? err.message : "Delete failed";
+      setError(msg);
+      toast.error(msg);
     }
   }
 
@@ -206,8 +217,11 @@ export default function GuestsPage() {
       setSelected(new Set());
       await load(weddingId);
       setInfo(`Updated RSVP to ${status} for selected guests.`);
+      toast.success(`RSVP updated to ${status}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Bulk update failed");
+      const msg = err instanceof Error ? err.message : "Bulk update failed";
+      setError(msg);
+      toast.error(msg);
     }
   }
 
@@ -222,8 +236,11 @@ export default function GuestsPage() {
       a.download = "guests.csv";
       a.click();
       URL.revokeObjectURL(url);
+      toast.success("Guest list exported");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Export failed");
+      const msg = err instanceof Error ? err.message : "Export failed";
+      setError(msg);
+      toast.error(msg);
     }
   }
 
@@ -234,8 +251,11 @@ export default function GuestsPage() {
       const result = await api.importGuestsCsv(weddingId, file);
       setInfo(result.message);
       await load(weddingId);
+      toast.success(result.message || "Guests imported");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Import failed");
+      const msg = err instanceof Error ? err.message : "Import failed";
+      setError(msg);
+      toast.error(msg);
     }
   }
 
