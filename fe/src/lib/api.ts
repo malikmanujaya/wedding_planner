@@ -43,6 +43,8 @@ export type Guest = {
   tableLabel: string | null;
   notes: string | null;
   inviteToken: string | null;
+  attendanceStatus: "NOT_ARRIVED" | "ADMITTED" | "REJECTED";
+  checkedInAt: string | null;
 };
 
 export type PublicInvite = {
@@ -57,6 +59,20 @@ export type PublicInvite = {
   tableLabel: string | null;
   seatLabel: string | null;
   seatAssigned: boolean;
+  attendanceStatus: Guest["attendanceStatus"];
+  checkedInAt: string | null;
+};
+
+export type CheckInGuest = {
+  id: number;
+  fullName: string;
+  household: string | null;
+  rsvpStatus: Guest["rsvpStatus"];
+  tableLabel: string | null;
+  seatLabel: string | null;
+  inviteToken: string | null;
+  attendanceStatus: Guest["attendanceStatus"];
+  checkedInAt: string | null;
 };
 
 export type VendorPayment = {
@@ -514,6 +530,47 @@ export const api = {
     return request<PublicInvite>(`/api/public/invites/${token}/rsvp`, {
       method: "PUT",
       body: JSON.stringify(payload),
+    });
+  },
+  findSeat(slug: string, payload: { guestName: string; tableLabel: string }) {
+    return request<{
+      matched: boolean;
+      message: string;
+      guestName: string | null;
+      tableLabel: string | null;
+      seatLabel: string | null;
+      rsvpStatus: Guest["rsvpStatus"] | null;
+      attendanceStatus: Guest["attendanceStatus"] | null;
+    }>(`/api/public/weddings/${slug}/seat-finder`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  lookupCheckIn(weddingId: number, params?: { q?: string; token?: string }) {
+    const search = new URLSearchParams();
+    if (params?.q) search.set("q", params.q);
+    if (params?.token) search.set("token", params.token);
+    const qs = search.toString();
+    return request<CheckInGuest[]>(
+      `/api/weddings/${weddingId}/check-in${qs ? `?${qs}` : ""}`
+    );
+  },
+  checkInStats(weddingId: number) {
+    return request<{
+      totalGuests: number;
+      admitted: number;
+      rejected: number;
+      notArrived: number;
+    }>(`/api/weddings/${weddingId}/check-in/stats`);
+  },
+  checkInGuest(
+    weddingId: number,
+    guestId: number,
+    action: Guest["attendanceStatus"]
+  ) {
+    return request<CheckInGuest>(`/api/weddings/${weddingId}/check-in/${guestId}`, {
+      method: "POST",
+      body: JSON.stringify({ action }),
     });
   },
   bulkUpdateGuestRsvp(

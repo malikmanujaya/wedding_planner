@@ -1,19 +1,15 @@
-package lk.weddingplanner.api.invite.dto;
+package lk.weddingplanner.api.checkin.dto;
 
 import lk.weddingplanner.api.domain.AttendanceStatus;
 import lk.weddingplanner.api.domain.RsvpStatus;
 
-public record PublicInviteResponse(
-        String token,
-        String weddingTitle,
-        String weddingDate,
-        String venue,
-        String guestName,
+public record CheckInGuestResponse(
+        Long id,
+        String fullName,
         String household,
-        String mealPreference,
         RsvpStatus rsvpStatus,
         String tableLabel,
         String seatLabel,
-        boolean seatAssigned,
+        String inviteToken,
         AttendanceStatus attendanceStatus,
         String checkedInAt) {}

@@ -114,6 +114,15 @@ export default function GuestInvitePage() {
               </div>
             )}
 
+            {invite.attendanceStatus && invite.attendanceStatus !== "NOT_ARRIVED" && (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground">Entrance</span>
+                <Badge variant={invite.attendanceStatus === "ADMITTED" ? "success" : "destructive"}>
+                  {invite.attendanceStatus}
+                </Badge>
+              </div>
+            )}
+
             <div className="flex items-center gap-2 text-sm">
               <span className="text-muted-foreground">Current RSVP</span>
               <Badge variant="secondary">{invite.rsvpStatus}</Badge>

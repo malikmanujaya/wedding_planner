@@ -243,7 +243,9 @@ public class GuestService {
                 guest.getTags(),
                 guest.getTableLabel(),
                 guest.getNotes(),
-                guest.getInviteToken());
+                guest.getInviteToken(),
+                guest.getAttendanceStatus(),
+                guest.getCheckedInAt() != null ? guest.getCheckedInAt().toString() : null);
     }
 
     private boolean matchesQuery(Guest g, String query) {

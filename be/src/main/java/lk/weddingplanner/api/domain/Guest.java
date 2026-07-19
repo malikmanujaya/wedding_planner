@@ -59,6 +59,12 @@ public class Guest {
     @Column(unique = true, length = 64)
     private String inviteToken;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private AttendanceStatus attendanceStatus = AttendanceStatus.NOT_ARRIVED;
+
+    private Instant checkedInAt;
+
     @Column(length = 500)
     private String notes;
 

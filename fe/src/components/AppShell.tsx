@@ -14,6 +14,7 @@ import {
   UsersRound,
   Heart,
   Armchair,
+  ScanLine,
 } from "lucide-react";
 import { api, getStoredUser, startAuthSession } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,7 @@ const nav = [
   { href: "/crew", label: "Crew", icon: UsersRound },
   { href: "/guests", label: "Guests", icon: Users },
   { href: "/seating", label: "Seating", icon: Armchair },
+  { href: "/check-in", label: "Check-in", icon: ScanLine },
   { href: "/vendors", label: "Vendors", icon: Store },
 ];
 

@@ -1,5 +1,6 @@
 package lk.weddingplanner.api.guest.dto;
 
+import lk.weddingplanner.api.domain.AttendanceStatus;
 import lk.weddingplanner.api.domain.RsvpStatus;
 
 public record GuestResponse(
@@ -14,4 +15,6 @@ public record GuestResponse(
         String tags,
         String tableLabel,
         String notes,
-        String inviteToken) {}
+        String inviteToken,
+        AttendanceStatus attendanceStatus,
+        String checkedInAt) {}

@@ -99,15 +99,15 @@ Say in chat: `start A-11` / `done B-03` to update.
 | B-10 | BE: invitation token + guest binding + seat payload | Cursor | S4 | 0.5 | done |
 | B-11 | FE: invitation page (branding, RSVP, seat reveal) | Cursor | S4 | 1.5 | done |
 | B-12 | QR generate for invite / seat (print + digital) | Cursor | S4 | 0.5 | done |
-| B-13 | Host mode: scan/show guest seat at entrance | Cursor | S4 | 0.5 | pending |
+| B-13 | Host mode: scan/show guest seat at entrance | Cursor | S4 | 0.5 | done |
 
 ### QR seat finder / check-in
 
 | ID | Task | Owner | Sprint | Days | Status |
 |----|------|-------|--------|-----:|--------|
-| B-20 | Public QR seat finder page (table no + name verify) | Cursor | S4 | 1 | pending |
-| B-21 | Attendance permission verify + check-in stamp | Cursor | S4 | 1 | pending |
-| B-22 | Crew tablet check-in UI (admit / reject) | Cursor | S4 | 0.5 | pending |
+| B-20 | Public QR seat finder page (table no + name verify) | Cursor | S4 | 1 | done |
+| B-21 | Attendance permission verify + check-in stamp | Cursor | S4 | 1 | done |
+| B-22 | Crew tablet check-in UI (admit / reject) | Cursor | S4 | 0.5 | done |
 
 ### WhatsApp
 

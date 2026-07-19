@@ -96,7 +96,9 @@ public class InviteService {
                 guest.getRsvpStatus(),
                 tableLabel,
                 seat.seatLabel(),
-                tableLabel != null && !tableLabel.isBlank());
+                tableLabel != null && !tableLabel.isBlank(),
+                guest.getAttendanceStatus(),
+                guest.getCheckedInAt() != null ? guest.getCheckedInAt().toString() : null);
     }
 
     private SeatInfo findSeat(Long weddingId, Long guestId) {
