@@ -3,7 +3,17 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Armchair, Circle, RotateCw, Save, Square, Trash2, UserPlus } from "lucide-react";
+import {
+  Armchair,
+  Circle,
+  Download,
+  RotateCw,
+  Save,
+  Square,
+  Trash2,
+  UserPlus,
+} from "lucide-react";
+import type { SeatingCanvasHandle } from "@/components/seating/SeatingCanvas";
 import {
   api,
   getActiveWeddingId,
@@ -64,6 +74,7 @@ export default function SeatingPage() {
   const [saving, setSaving] = useState(false);
   const [guestQuery, setGuestQuery] = useState("");
   const viewCenterRef = useRef({ x: 600, y: 400 });
+  const canvasRef = useRef<SeatingCanvasHandle>(null);
 
   const load = useCallback(async (id: number) => {
     const [seating, guestList, weddings] = await Promise.all([
@@ -115,6 +126,19 @@ export default function SeatingPage() {
   }, [guests, assigned, guestQuery]);
 
   const overCaps = overCapacityTables(plan);
+
+  function exportPng() {
+    const uri = canvasRef.current?.exportPng();
+    if (!uri) {
+      toast.error("Canvas not ready to export");
+      return;
+    }
+    const a = document.createElement("a");
+    a.href = uri;
+    a.download = `seating-${weddingTitle.replace(/\s+/g, "-").toLowerCase() || "plan"}.png`;
+    a.click();
+    toast.success("Seating plan exported");
+  }
 
   function updateTable(id: string, patch: Partial<SeatingTable>) {
     setPlan((prev) => applyTableGeometry(prev, id, patch));
@@ -276,6 +300,10 @@ export default function SeatingPage() {
             <Trash2 className="h-4 w-4" />
             Delete
           </Button>
+          <Button variant="outline" onClick={exportPng}>
+            <Download className="h-4 w-4" />
+            Export PNG
+          </Button>
           <Button onClick={onSave} disabled={saving}>
             <Save className="h-4 w-4" />
             {saving ? "Saving…" : "Save"}
@@ -304,6 +332,7 @@ export default function SeatingPage() {
         </CardHeader>
         <CardContent>
           <SeatingCanvas
+            ref={canvasRef}
             plan={plan}
             selectedId={selectedId}
             onSelect={setSelectedId}

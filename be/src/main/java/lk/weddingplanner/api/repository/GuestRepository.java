@@ -24,5 +24,21 @@ public interface GuestRepository extends JpaRepository<Guest, Long> {
 
     Optional<Guest> findByInviteToken(String inviteToken);
 
+    @Query("""
+            select g from Guest g
+            where g.wedding.id = :weddingId
+              and lower(g.fullName) = lower(:fullName)
+            """)
+    List<Guest> findByWeddingIdAndFullNameIgnoreCase(Long weddingId, String fullName);
+
+    @Query("""
+            select g from Guest g
+            where g.wedding.id = :weddingId
+              and lower(g.fullName) = lower(:fullName)
+              and lower(g.email) = lower(:email)
+            """)
+    Optional<Guest> findByWeddingIdAndFullNameAndEmailIgnoreCase(
+            Long weddingId, String fullName, String email);
+
     long countByWeddingIdAndRsvpStatus(Long weddingId, RsvpStatus rsvpStatus);
 }

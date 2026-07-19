@@ -37,6 +37,22 @@ public class Wedding {
     @Column(unique = true, length = 40)
     private String inviteCode;
 
+    @Column(length = 160)
+    private String coupleNames;
+
+    @Column(length = 5000)
+    private String story;
+
+    @Column(length = 500)
+    private String heroImageUrl;
+
+    /** JSON array of image URL strings. */
+    @Column(length = 4000)
+    private String photoStrip;
+
+    @Column(nullable = false)
+    private boolean publicEnabled = true;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Ellipse, Group, Layer, Line, Rect, Stage, Text, Transformer } from "react-konva";
 import type Konva from "konva";
 import type { SeatingPlanData, SeatingTable } from "@/lib/seating";
@@ -17,6 +17,10 @@ type Props = {
   onViewCenterChange?: (center: { x: number; y: number }) => void;
 };
 
+export type SeatingCanvasHandle = {
+  exportPng: () => string | null;
+};
+
 const MIN_SCALE = 0.25;
 const MAX_SCALE = 2.5;
 const VIEWPORT_HEIGHT = 560;
@@ -25,15 +29,18 @@ function clampScale(s: number) {
   return Math.min(MAX_SCALE, Math.max(MIN_SCALE, s));
 }
 
-export function SeatingCanvas({
-  plan,
-  selectedId,
-  onSelect,
-  onChangeTable,
-  onOpenEditor,
-  guestNames,
-  onViewCenterChange,
-}: Props) {
+export const SeatingCanvas = forwardRef<SeatingCanvasHandle, Props>(function SeatingCanvas(
+  {
+    plan,
+    selectedId,
+    onSelect,
+    onChangeTable,
+    onOpenEditor,
+    guestNames,
+    onViewCenterChange,
+  },
+  ref
+) {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
@@ -45,6 +52,35 @@ export function SeatingCanvas({
   const [view, setView] = useState<ViewState>({ x: 0, y: 0, scale: 1 });
   const [cursor, setCursor] = useState<"default" | "grab" | "grabbing">("default");
   const didFitRef = useRef(false);
+
+  useImperativeHandle(ref, () => ({
+    exportPng: () => {
+      const stage = stageRef.current;
+      if (!stage) return null;
+      const tr = transformerRef.current;
+      const prevNodes = tr?.nodes() ?? [];
+      tr?.nodes([]);
+      const prev = {
+        x: stage.x(),
+        y: stage.y(),
+        scaleX: stage.scaleX(),
+        scaleY: stage.scaleY(),
+        width: stage.width(),
+        height: stage.height(),
+      };
+      stage.position({ x: 0, y: 0 });
+      stage.scale({ x: 1, y: 1 });
+      stage.size({ width: plan.width, height: plan.height });
+      stage.batchDraw();
+      const uri = stage.toDataURL({ pixelRatio: 2, mimeType: "image/png" });
+      stage.position({ x: prev.x, y: prev.y });
+      stage.scale({ x: prev.scaleX, y: prev.scaleY });
+      stage.size({ width: prev.width, height: prev.height });
+      if (tr) tr.nodes(prevNodes);
+      stage.batchDraw();
+      return uri;
+    },
+  }));
 
   const reportCenter = useCallback(
     (next: ViewState, viewport: { width: number; height: number }) => {
@@ -475,4 +511,4 @@ export function SeatingCanvas({
       </p>
     </div>
   );
-}
+});

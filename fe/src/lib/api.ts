@@ -10,6 +10,31 @@ export type Wedding = {
   membershipRole: string;
 };
 
+export type PublicWedding = {
+  slug: string;
+  title: string;
+  coupleNames: string | null;
+  weddingDate: string | null;
+  venue: string | null;
+  story: string | null;
+  heroImageUrl: string | null;
+  photoUrls: string[];
+  publicEnabled: boolean;
+};
+
+export type WeddingPublicPage = {
+  weddingId: number;
+  slug: string;
+  title: string;
+  coupleNames: string | null;
+  weddingDate: string | null;
+  venue: string | null;
+  story: string | null;
+  heroImageUrl: string | null;
+  photoUrls: string[];
+  publicEnabled: boolean;
+};
+
 export type WeddingMember = {
   membershipId: number;
   userId: number;
@@ -368,6 +393,38 @@ export const api = {
   }) {
     return request<Wedding>("/api/weddings", {
       method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  getPublicWedding(slug: string) {
+    return request<PublicWedding>(`/api/public/weddings/${slug}`);
+  },
+  lookupPublicRsvp(slug: string, payload: { fullName: string; email?: string }) {
+    return request<{
+      matched: boolean;
+      message: string;
+      inviteToken: string | null;
+      guestName: string | null;
+    }>(`/api/public/weddings/${slug}/rsvp-lookup`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  getWeddingPublicPage(weddingId: number) {
+    return request<WeddingPublicPage>(`/api/weddings/${weddingId}/public-page`);
+  },
+  updateWeddingPublicPage(
+    weddingId: number,
+    payload: {
+      coupleNames?: string;
+      story?: string;
+      heroImageUrl?: string;
+      photoUrls?: string[];
+      publicEnabled?: boolean;
+    }
+  ) {
+    return request<WeddingPublicPage>(`/api/weddings/${weddingId}/public-page`, {
+      method: "PUT",
       body: JSON.stringify(payload),
     });
   },

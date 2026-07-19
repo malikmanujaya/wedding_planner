@@ -90,7 +90,7 @@ Say in chat: `start A-11` / `done B-03` to update.
 | B-04 | FE: table shapes library + labels + capacity | Cursor | S3 | 1.5 | done |
 | B-05 | FE: assign guests to seats/tables + unassigned panel | Cursor | S4 | 2 | done |
 | B-06 | Conflict checks: double-seat, over-capacity | Cursor | S4 | 0.5 | done |
-| B-07 | Export seating snapshot (PNG/PDF optional) | Cursor | S4 | 1 | pending |
+| B-07 | Export seating snapshot (PNG/PDF optional) | Cursor | S4 | 1 | done |
 
 ### Invitation + QR
 
@@ -128,9 +128,9 @@ Say in chat: `start A-11` / `done B-03` to update.
 
 | ID | Task | Owner | Sprint | Days | Status |
 |----|------|-------|--------|-----:|--------|
-| C-01 | Public wedding microsite: slug, SEO, countdown | Cursor | S6 | 1.5 | pending |
-| C-02 | Story / couple section + photo strip | Cursor | S6 | 1 | pending |
-| C-03 | Public RSVP entry linked to guest record | Cursor | S6 | 1 | pending |
+| C-01 | Public wedding microsite: slug, SEO, countdown | Cursor | S6 | 1.5 | done |
+| C-02 | Story / couple section + photo strip | Cursor | S6 | 1 | done |
+| C-03 | Public RSVP entry linked to guest record | Cursor | S6 | 1 | done |
 
 ### Gallery + video
 

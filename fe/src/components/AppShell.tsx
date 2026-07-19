@@ -15,6 +15,7 @@ import {
   Heart,
   Armchair,
   ScanLine,
+  Globe,
 } from "lucide-react";
 import { api, getStoredUser, startAuthSession } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -41,6 +42,7 @@ const nav = [
   { href: "/seating", label: "Seating", icon: Armchair },
   { href: "/check-in", label: "Check-in", icon: ScanLine },
   { href: "/vendors", label: "Vendors", icon: Store },
+  { href: "/public-page", label: "Public page", icon: Globe },
 ];
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {

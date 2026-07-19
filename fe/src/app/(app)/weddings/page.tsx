@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -175,16 +176,23 @@ export default function WeddingsPage() {
                     <Badge variant="secondary">{w.membershipRole}</Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setActiveWeddingId(w.id);
-                        toast.success(`Active wedding: ${w.title}`);
-                      }}
-                    >
-                      Set active
-                    </Button>
+                    <div className="flex justify-end gap-2">
+                      <Button size="sm" variant="ghost" asChild>
+                        <Link href={`/w/${w.slug}`} target="_blank">
+                          Site
+                        </Link>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setActiveWeddingId(w.id);
+                          toast.success(`Active wedding: ${w.title}`);
+                        }}
+                      >
+                        Set active
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
