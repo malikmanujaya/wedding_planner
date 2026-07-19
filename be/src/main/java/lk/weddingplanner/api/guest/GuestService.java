@@ -16,6 +16,7 @@ import lk.weddingplanner.api.domain.Wedding;
 import lk.weddingplanner.api.guest.dto.GuestImportResult;
 import lk.weddingplanner.api.guest.dto.GuestResponse;
 import lk.weddingplanner.api.guest.dto.UpsertGuestRequest;
+import lk.weddingplanner.api.invite.InviteService;
 import lk.weddingplanner.api.repository.GuestRepository;
 import lk.weddingplanner.api.security.UserPrincipal;
 import lk.weddingplanner.api.wedding.WeddingAccessService;
@@ -32,6 +33,7 @@ public class GuestService {
 
     private final GuestRepository guestRepository;
     private final WeddingAccessService weddingAccessService;
+    private final InviteService inviteService;
 
     @Transactional(readOnly = true)
     public List<GuestResponse> list(UserPrincipal principal, Long weddingId, String q, String rsvp) {
@@ -52,6 +54,7 @@ public class GuestService {
         Guest guest = new Guest();
         guest.setWedding(wedding);
         apply(guest, request);
+        inviteService.ensureToken(guest);
         return toResponse(guestRepository.save(guest));
     }
 
@@ -64,6 +67,33 @@ public class GuestService {
                         .findByIdAndWeddingId(guestId, weddingId)
                         .orElseThrow(() -> new ApiException("Guest not found", HttpStatus.NOT_FOUND));
         apply(guest, request);
+        inviteService.ensureToken(guest);
+        guest.setUpdatedAt(Instant.now());
+        return toResponse(guestRepository.save(guest));
+    }
+
+    @Transactional
+    public GuestResponse ensureInvite(
+            UserPrincipal principal, Long weddingId, Long guestId) {
+        weddingAccessService.requireMemberWedding(principal, weddingId);
+        Guest guest =
+                guestRepository
+                        .findByIdAndWeddingId(guestId, weddingId)
+                        .orElseThrow(() -> new ApiException("Guest not found", HttpStatus.NOT_FOUND));
+        inviteService.ensureToken(guest);
+        guest.setUpdatedAt(Instant.now());
+        return toResponse(guestRepository.save(guest));
+    }
+
+    @Transactional
+    public GuestResponse regenerateInvite(
+            UserPrincipal principal, Long weddingId, Long guestId) {
+        weddingAccessService.requireMemberWedding(principal, weddingId);
+        Guest guest =
+                guestRepository
+                        .findByIdAndWeddingId(guestId, weddingId)
+                        .orElseThrow(() -> new ApiException("Guest not found", HttpStatus.NOT_FOUND));
+        inviteService.regenerateToken(guest);
         guest.setUpdatedAt(Instant.now());
         return toResponse(guestRepository.save(guest));
     }
@@ -184,6 +214,7 @@ public class GuestService {
         guest.setTags(valueAt(parts, 6));
         guest.setTableLabel(valueAt(parts, 7));
         guest.setNotes(valueAt(parts, 8));
+        inviteService.ensureToken(guest);
         return guest;
     }
 
@@ -211,7 +242,8 @@ public class GuestService {
                 guest.getRsvpStatus(),
                 guest.getTags(),
                 guest.getTableLabel(),
-                guest.getNotes());
+                guest.getNotes(),
+                guest.getInviteToken());
     }
 
     private boolean matchesQuery(Guest g, String query) {

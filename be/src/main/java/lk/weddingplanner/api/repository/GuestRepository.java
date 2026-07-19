@@ -22,5 +22,7 @@ public interface GuestRepository extends JpaRepository<Guest, Long> {
             """)
     Optional<Guest> findByIdAndWeddingId(Long id, Long weddingId);
 
+    Optional<Guest> findByInviteToken(String inviteToken);
+
     long countByWeddingIdAndRsvpStatus(Long weddingId, RsvpStatus rsvpStatus);
 }

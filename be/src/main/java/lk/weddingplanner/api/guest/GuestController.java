@@ -60,6 +60,22 @@ public class GuestController {
         return guestService.update(principal, weddingId, guestId, request);
     }
 
+    @PostMapping("/{guestId}/invite")
+    public GuestResponse ensureInvite(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long weddingId,
+            @PathVariable Long guestId) {
+        return guestService.ensureInvite(principal, weddingId, guestId);
+    }
+
+    @PostMapping("/{guestId}/invite/regenerate")
+    public GuestResponse regenerateInvite(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long weddingId,
+            @PathVariable Long guestId) {
+        return guestService.regenerateInvite(principal, weddingId, guestId);
+    }
+
     @DeleteMapping("/{guestId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(

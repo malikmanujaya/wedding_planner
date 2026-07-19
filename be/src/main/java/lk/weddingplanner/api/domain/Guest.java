@@ -56,6 +56,9 @@ public class Guest {
     @Column(length = 80)
     private String tableLabel;
 
+    @Column(unique = true, length = 64)
+    private String inviteToken;
+
     @Column(length = 500)
     private String notes;
 

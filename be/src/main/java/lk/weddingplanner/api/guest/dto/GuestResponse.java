@@ -13,4 +13,5 @@ public record GuestResponse(
         RsvpStatus rsvpStatus,
         String tags,
         String tableLabel,
-        String notes) {}
+        String notes,
+        String inviteToken) {}

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Download, Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { Download, Link2, Pencil, Plus, QrCode, Trash2, Upload } from "lucide-react";
 import {
   api,
   getActiveWeddingId,
@@ -13,6 +13,7 @@ import {
 } from "@/lib/api";
 import { guestSchema, type GuestFormValues } from "@/lib/schemas";
 import { toast } from "@/components/ui/toast";
+import { QrCodeImage } from "@/components/QrCodeImage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,6 +97,8 @@ export default function GuestsPage() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Guest | null>(null);
+  const [inviteGuest, setInviteGuest] = useState<Guest | null>(null);
+  const [inviteBusy, setInviteBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<GuestFormValues>({
@@ -178,6 +181,52 @@ export default function GuestsPage() {
       const msg = err instanceof Error ? err.message : "Save failed";
       setError(msg);
       toast.error(msg);
+    }
+  }
+
+  async function openInvite(guest: Guest) {
+    if (!weddingId) return;
+    setInviteBusy(true);
+    try {
+      const ensured =
+        guest.inviteToken
+          ? guest
+          : await api.ensureGuestInvite(weddingId, guest.id);
+      setInviteGuest(ensured);
+      if (!guest.inviteToken) {
+        setGuests((prev) => prev.map((g) => (g.id === ensured.id ? ensured : g)));
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Could not open invite";
+      toast.error(msg);
+    } finally {
+      setInviteBusy(false);
+    }
+  }
+
+  function inviteUrl(guest: Guest) {
+    if (!guest.inviteToken || typeof window === "undefined") return "";
+    return `${window.location.origin}/invite/guest/${guest.inviteToken}`;
+  }
+
+  async function copyInviteLink() {
+    if (!inviteGuest?.inviteToken) return;
+    await navigator.clipboard.writeText(inviteUrl(inviteGuest));
+    toast.success("Invite link copied");
+  }
+
+  async function regenerateInvite() {
+    if (!weddingId || !inviteGuest) return;
+    setInviteBusy(true);
+    try {
+      const updated = await api.regenerateGuestInvite(weddingId, inviteGuest.id);
+      setInviteGuest(updated);
+      setGuests((prev) => prev.map((g) => (g.id === updated.id ? updated : g)));
+      toast.success("Invite link regenerated");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Regenerate failed");
+    } finally {
+      setInviteBusy(false);
     }
   }
 
@@ -427,6 +476,15 @@ export default function GuestsPage() {
                   <TableCell>{guest.tableLabel ?? "—"}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Invite / QR"
+                        disabled={inviteBusy}
+                        onClick={() => openInvite(guest)}
+                      >
+                        <QrCode className="h-4 w-4" />
+                      </Button>
                       <Button size="icon" variant="ghost" onClick={() => openEdit(guest)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -601,6 +659,50 @@ export default function GuestsPage() {
               </DialogFooter>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={inviteGuest !== null}
+        onOpenChange={(open) => !open && setInviteGuest(null)}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Invite · {inviteGuest?.fullName}</DialogTitle>
+            <DialogDescription>
+              Share this link or QR so the guest can RSVP and see their seat.
+            </DialogDescription>
+          </DialogHeader>
+          {inviteGuest?.inviteToken && (
+            <div className="flex flex-col items-center gap-4">
+              <QrCodeImage value={inviteUrl(inviteGuest)} size={200} className="rounded-md border" />
+              <Input readOnly value={inviteUrl(inviteGuest)} className="text-xs" />
+              <div className="flex w-full flex-wrap gap-2">
+                <Button className="flex-1" onClick={copyInviteLink}>
+                  <Link2 className="h-4 w-4" />
+                  Copy link
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  disabled={inviteBusy}
+                  onClick={regenerateInvite}
+                >
+                  Regenerate
+                </Button>
+              </div>
+              <Button variant="ghost" asChild className="w-full">
+                <a href={inviteUrl(inviteGuest)} target="_blank" rel="noreferrer">
+                  Open invite page
+                </a>
+              </Button>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInviteGuest(null)}>
+              Close
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

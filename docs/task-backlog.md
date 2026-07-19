@@ -96,9 +96,9 @@ Say in chat: `start A-11` / `done B-03` to update.
 
 | ID | Task | Owner | Sprint | Days | Status |
 |----|------|-------|--------|-----:|--------|
-| B-10 | BE: invitation token + guest binding + seat payload | Cursor | S4 | 0.5 | pending |
-| B-11 | FE: invitation page (branding, RSVP, seat reveal) | Cursor | S4 | 1.5 | pending |
-| B-12 | QR generate for invite / seat (print + digital) | Cursor | S4 | 0.5 | pending |
+| B-10 | BE: invitation token + guest binding + seat payload | Cursor | S4 | 0.5 | done |
+| B-11 | FE: invitation page (branding, RSVP, seat reveal) | Cursor | S4 | 1.5 | done |
+| B-12 | QR generate for invite / seat (print + digital) | Cursor | S4 | 0.5 | done |
 | B-13 | Host mode: scan/show guest seat at entrance | Cursor | S4 | 0.5 | pending |
 
 ### QR seat finder / check-in

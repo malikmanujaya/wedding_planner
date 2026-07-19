@@ -42,6 +42,21 @@ export type Guest = {
   tags: string | null;
   tableLabel: string | null;
   notes: string | null;
+  inviteToken: string | null;
+};
+
+export type PublicInvite = {
+  token: string;
+  weddingTitle: string;
+  weddingDate: string | null;
+  venue: string | null;
+  guestName: string;
+  household: string | null;
+  mealPreference: string | null;
+  rsvpStatus: Guest["rsvpStatus"];
+  tableLabel: string | null;
+  seatLabel: string | null;
+  seatAssigned: boolean;
 };
 
 export type VendorPayment = {
@@ -472,6 +487,33 @@ export const api = {
   deleteGuest(weddingId: number, guestId: number) {
     return request<void>(`/api/weddings/${weddingId}/guests/${guestId}`, {
       method: "DELETE",
+    });
+  },
+  ensureGuestInvite(weddingId: number, guestId: number) {
+    return request<Guest>(`/api/weddings/${weddingId}/guests/${guestId}/invite`, {
+      method: "POST",
+    });
+  },
+  regenerateGuestInvite(weddingId: number, guestId: number) {
+    return request<Guest>(
+      `/api/weddings/${weddingId}/guests/${guestId}/invite/regenerate`,
+      { method: "POST" }
+    );
+  },
+  getPublicInvite(token: string) {
+    return request<PublicInvite>(`/api/public/invites/${token}`);
+  },
+  submitPublicRsvp(
+    token: string,
+    payload: {
+      rsvpStatus: Guest["rsvpStatus"];
+      mealPreference?: string;
+      notes?: string;
+    }
+  ) {
+    return request<PublicInvite>(`/api/public/invites/${token}/rsvp`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
     });
   },
   bulkUpdateGuestRsvp(
