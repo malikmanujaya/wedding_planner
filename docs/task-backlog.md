@@ -63,10 +63,10 @@ Say in chat: `start A-11` / `done B-03` to update.
 
 | ID | Task | Owner | Sprint | Days | Status |
 |----|------|-------|--------|-----:|--------|
-| A-30 | BE: guest entity — household, meal, RSVP status, tags | Cursor | S2 | 0.5 | pending |
-| A-31 | FE: guest list table — search, filters, bulk edit | Cursor | S2 | 1.5 | pending |
-| A-32 | CSV import / export guests | Cursor | S2 | 1 | pending |
-| A-33 | Guest RSVP status sync hooks (invite/WA later) | Cursor | S2 | 0.5 | pending |
+| A-30 | BE: guest entity — household, meal, RSVP status, tags | Cursor | S2 | 0.5 | done |
+| A-31 | FE: guest list table — search, filters, bulk edit | Cursor | S2 | 1.5 | done |
+| A-32 | CSV import / export guests | Cursor | S2 | 1 | done |
+| A-33 | Guest RSVP status sync hooks (invite/WA later) | Cursor | S2 | 0.5 | done |
 
 ### Wedding vendors (not marketplace)
 

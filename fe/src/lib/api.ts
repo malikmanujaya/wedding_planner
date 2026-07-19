@@ -37,6 +37,20 @@ export type ChecklistTask = {
   assigneeName: string | null;
 };
 
+export type Guest = {
+  id: number;
+  weddingId: number;
+  fullName: string;
+  email: string | null;
+  phone: string | null;
+  household: string | null;
+  mealPreference: string | null;
+  rsvpStatus: "PENDING" | "ACCEPTED" | "DECLINED" | "MAYBE";
+  tags: string | null;
+  tableLabel: string | null;
+  notes: string | null;
+};
+
 type ApiError = {
   error?: string;
   message?: string;
@@ -220,5 +234,97 @@ export const api = {
     return request<void>(`/api/weddings/${weddingId}/tasks/${taskId}`, {
       method: "DELETE",
     });
+  },
+  listGuests(weddingId: number, params?: { q?: string; rsvp?: string }) {
+    const search = new URLSearchParams();
+    if (params?.q) search.set("q", params.q);
+    if (params?.rsvp) search.set("rsvp", params.rsvp);
+    const qs = search.toString();
+    return request<Guest[]>(
+      `/api/weddings/${weddingId}/guests${qs ? `?${qs}` : ""}`
+    );
+  },
+  createGuest(
+    weddingId: number,
+    payload: {
+      fullName: string;
+      email?: string;
+      phone?: string;
+      household?: string;
+      mealPreference?: string;
+      rsvpStatus: Guest["rsvpStatus"];
+      tags?: string;
+      tableLabel?: string;
+      notes?: string;
+    }
+  ) {
+    return request<Guest>(`/api/weddings/${weddingId}/guests`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  updateGuest(
+    weddingId: number,
+    guestId: number,
+    payload: {
+      fullName: string;
+      email?: string;
+      phone?: string;
+      household?: string;
+      mealPreference?: string;
+      rsvpStatus: Guest["rsvpStatus"];
+      tags?: string;
+      tableLabel?: string;
+      notes?: string;
+    }
+  ) {
+    return request<Guest>(`/api/weddings/${weddingId}/guests/${guestId}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  },
+  deleteGuest(weddingId: number, guestId: number) {
+    return request<void>(`/api/weddings/${weddingId}/guests/${guestId}`, {
+      method: "DELETE",
+    });
+  },
+  bulkUpdateGuestRsvp(
+    weddingId: number,
+    guestIds: number[],
+    rsvpStatus: Guest["rsvpStatus"]
+  ) {
+    return request<void>(`/api/weddings/${weddingId}/guests/bulk-rsvp`, {
+      method: "PUT",
+      body: JSON.stringify({ guestIds, rsvpStatus }),
+    });
+  },
+  async exportGuestsCsv(weddingId: number) {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/api/weddings/${weddingId}/guests/export`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new Error("Export failed");
+    return await res.text();
+  },
+  async importGuestsCsv(weddingId: number, file: File) {
+    const token = getToken();
+    const body = new FormData();
+    body.append("file", file);
+    const res = await fetch(`${API_URL}/api/weddings/${weddingId}/guests/import`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body,
+    });
+    if (!res.ok) {
+      let message = `Request failed (${res.status})`;
+      try {
+        const err = (await res.json()) as ApiError;
+        message = err.error || err.message || message;
+      } catch {
+        /* ignore */
+      }
+      throw new Error(message);
+    }
+    return (await res.json()) as { imported: number; skipped: number; message: string };
   },
 };

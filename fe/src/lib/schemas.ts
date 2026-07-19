@@ -37,9 +37,22 @@ export const updateCrewSchema = z.object({
   responsibilities: z.string().max(500).optional().or(z.literal("")),
 });
 
+export const guestSchema = z.object({
+  fullName: z.string().min(2, "Name is required"),
+  email: z.string().email("Invalid email").optional().or(z.literal("")),
+  phone: z.string().max(40).optional().or(z.literal("")),
+  household: z.string().max(120).optional().or(z.literal("")),
+  mealPreference: z.string().max(80).optional().or(z.literal("")),
+  rsvpStatus: z.enum(["PENDING", "ACCEPTED", "DECLINED", "MAYBE"]),
+  tags: z.string().max(200).optional().or(z.literal("")),
+  tableLabel: z.string().max(80).optional().or(z.literal("")),
+  notes: z.string().max(500).optional().or(z.literal("")),
+});
+
 export type LoginValues = z.infer<typeof loginSchema>;
 export type RegisterValues = z.infer<typeof registerSchema>;
 export type CreateWeddingValues = z.infer<typeof createWeddingSchema>;
 export type TaskFormValues = z.infer<typeof taskSchema>;
 export type InviteCrewValues = z.infer<typeof inviteCrewSchema>;
 export type UpdateCrewValues = z.infer<typeof updateCrewSchema>;
+export type GuestFormValues = z.infer<typeof guestSchema>;
