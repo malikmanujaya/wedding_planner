@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { api, type PublicWedding } from "@/lib/api";
+import { api, mediaUrl, type PublicWedding } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -83,7 +83,7 @@ export default function PublicWeddingPage() {
 
   const heroStyle = page.heroImageUrl
     ? {
-        backgroundImage: `linear-gradient(120deg, hsl(158 28% 10% / 0.72), hsl(162 20% 14% / 0.55)), url(${page.heroImageUrl})`,
+        backgroundImage: `linear-gradient(120deg, hsl(158 28% 10% / 0.72), hsl(162 20% 14% / 0.55)), url(${mediaUrl(page.heroImageUrl)})`,
       }
     : {
         backgroundImage:
@@ -166,7 +166,7 @@ export default function PublicWeddingPage() {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   key={url}
-                  src={url}
+                  src={mediaUrl(url)}
                   alt=""
                   className="h-56 w-72 shrink-0 snap-center object-cover sm:h-64 sm:w-80"
                 />

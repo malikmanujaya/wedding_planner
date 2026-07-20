@@ -1,5 +1,28 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:18080";
 
+/** Resolve uploaded or external image URLs for <img> / CSS. */
+export function mediaUrl(url: string | null | undefined): string {
+  if (!url) return "";
+  if (
+    url.startsWith("http://") ||
+    url.startsWith("https://") ||
+    url.startsWith("data:") ||
+    url.startsWith("blob:")
+  ) {
+    return url;
+  }
+  if (url.startsWith("/")) return `${API_URL}${url}`;
+  return url;
+}
+
+export type UploadResult = {
+  id: string;
+  url: string;
+  contentType: string;
+  sizeBytes: number;
+  originalFilename: string;
+};
+
 export type Wedding = {
   id: number;
   title: string;
@@ -394,6 +417,38 @@ export const api = {
     return request<Wedding>("/api/weddings", {
       method: "POST",
       body: JSON.stringify(payload),
+    });
+  },
+  uploadFile(
+    weddingId: number,
+    file: File,
+    onProgress?: (percent: number) => void
+  ): Promise<UploadResult> {
+    return new Promise((resolve, reject) => {
+      const token = getToken();
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `${API_URL}/api/weddings/${weddingId}/uploads`);
+      if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+      xhr.upload.onprogress = (e) => {
+        if (!e.lengthComputable || !onProgress) return;
+        onProgress(Math.round((e.loaded / e.total) * 100));
+      };
+      xhr.onload = () => {
+        try {
+          const body = xhr.responseText ? JSON.parse(xhr.responseText) : null;
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(body as UploadResult);
+            return;
+          }
+          reject(new Error(body?.error || body?.message || `Upload failed (${xhr.status})`));
+        } catch {
+          reject(new Error(`Upload failed (${xhr.status})`));
+        }
+      };
+      xhr.onerror = () => reject(new Error("Upload failed"));
+      const form = new FormData();
+      form.append("file", file);
+      xhr.send(form);
     });
   },
   getPublicWedding(slug: string) {

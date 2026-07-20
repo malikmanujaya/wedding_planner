@@ -19,13 +19,15 @@ spring:
         format_sql: true
   servlet:
     multipart:
-      max-file-size: 5MB
-      max-request-size: 5MB
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 server:
   port: 18080
 
 app:
+  upload:
+    dir: ./uploads
   jwt:
     secret: "wedding-planner-dev-secret-change-me-in-production-32chars-min"
     access-expiration-ms: 900000

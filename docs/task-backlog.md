@@ -136,7 +136,7 @@ Say in chat: `start A-11` / `done B-03` to update.
 
 | ID | Task | Owner | Sprint | Days | Status |
 |----|------|-------|--------|-----:|--------|
-| C-10 | Object storage (R2/S3) + signed upload URLs | Cursor | S6 | 1 | pending |
+| C-10 | Local disk uploads (`uploads/` + file IDs); R2/S3 later | Cursor | S6 | 1 | done |
 | C-11 | Photo gallery: upload, album, lightbox, permissions | Cursor | S6 | 1.5 | pending |
 | C-12 | Video upload + playback (Stream/Mux or direct MP4) | Cursor | S7 | 2.5 | pending |
 | C-13 | Guest contribution uploads (optional moderation) | Cursor | S7 | 1 | pending |

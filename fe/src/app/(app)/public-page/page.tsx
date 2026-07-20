@@ -13,6 +13,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  ImageUploadField,
+  MultiImageUploadField,
+} from "@/components/ui/image-upload";
+import {
   Card,
   CardContent,
   CardHeader,
@@ -25,7 +29,7 @@ export default function PublicPageEditor() {
   const [coupleNames, setCoupleNames] = useState("");
   const [story, setStory] = useState("");
   const [heroImageUrl, setHeroImageUrl] = useState("");
-  const [photoUrlsText, setPhotoUrlsText] = useState("");
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [publicEnabled, setPublicEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -37,7 +41,7 @@ export default function PublicPageEditor() {
     setCoupleNames(data.coupleNames ?? "");
     setStory(data.story ?? "");
     setHeroImageUrl(data.heroImageUrl ?? "");
-    setPhotoUrlsText(data.photoUrls.join("\n"));
+    setPhotoUrls(data.photoUrls ?? []);
     setPublicEnabled(data.publicEnabled);
   }, []);
 
@@ -63,10 +67,6 @@ export default function PublicPageEditor() {
     setSaving(true);
     setError(null);
     try {
-      const photoUrls = photoUrlsText
-        .split(/\n|,/)
-        .map((s) => s.trim())
-        .filter(Boolean);
       const data = await api.updateWeddingPublicPage(weddingId, {
         coupleNames,
         story,
@@ -75,6 +75,7 @@ export default function PublicPageEditor() {
         publicEnabled,
       });
       setPage(data);
+      setPhotoUrls(data.photoUrls ?? []);
       toast.success("Public page saved");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Save failed";
@@ -162,14 +163,13 @@ export default function PublicPageEditor() {
               </p>
             </div>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium">Hero image URL</label>
-              <Input
-                value={heroImageUrl}
-                onChange={(e) => setHeroImageUrl(e.target.value)}
-                placeholder="https://…"
-              />
-            </div>
+            <ImageUploadField
+              weddingId={weddingId}
+              value={heroImageUrl}
+              onChange={setHeroImageUrl}
+              label="Hero image"
+              hint="Upload a photo or paste a link. Used as the full-bleed cover."
+            />
 
             <div>
               <label className="mb-1 block text-sm font-medium">Our story</label>
@@ -182,17 +182,13 @@ export default function PublicPageEditor() {
               />
             </div>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium">Photo strip URLs</label>
-              <textarea
-                value={photoUrlsText}
-                onChange={(e) => setPhotoUrlsText(e.target.value)}
-                rows={4}
-                className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                placeholder={"One URL per line\nhttps://…\nhttps://…"}
-              />
-              <p className="mt-1 text-xs text-muted-foreground">Up to 12 image URLs.</p>
-            </div>
+            <MultiImageUploadField
+              weddingId={weddingId}
+              values={photoUrls}
+              onChange={setPhotoUrls}
+              label="Photo strip"
+              max={12}
+            />
 
             {error && <p className="text-sm text-destructive">{error}</p>}
 
