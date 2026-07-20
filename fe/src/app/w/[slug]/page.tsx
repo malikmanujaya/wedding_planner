@@ -3,9 +3,15 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { api, mediaUrl, type PublicWedding } from "@/lib/api";
+import {
+  api,
+  mediaUrl,
+  type GalleryAlbum,
+  type PublicWedding,
+} from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ImageLightbox } from "@/components/ui/image-lightbox";
 
 function daysUntil(dateStr: string | null) {
   if (!dateStr) return null;
@@ -22,24 +28,38 @@ export default function PublicWeddingPage() {
   const slug = params.slug;
   const router = useRouter();
   const [page, setPage] = useState<PublicWedding | null>(null);
+  const [albums, setAlbums] = useState<GalleryAlbum[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [lookupMsg, setLookupMsg] = useState<string | null>(null);
   const [looking, setLooking] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (!slug) return;
-    api
-      .getPublicWedding(slug)
-      .then(setPage)
+    Promise.all([api.getPublicWedding(slug), api.getPublicGallery(slug)])
+      .then(([wedding, gallery]) => {
+        setPage(wedding);
+        setAlbums(gallery.filter((a) => a.photos.length > 0));
+      })
       .catch((err) => setError(err instanceof Error ? err.message : "Page not found"))
       .finally(() => setLoading(false));
   }, [slug]);
 
   const countdown = useMemo(() => daysUntil(page?.weddingDate ?? null), [page?.weddingDate]);
   const displayName = page?.coupleNames?.trim() || page?.title || "";
+  const lightboxItems = useMemo(
+    () =>
+      albums.flatMap((a) =>
+        a.photos.map((p) => ({
+          imageUrl: p.imageUrl,
+          caption: p.caption || a.title,
+        }))
+      ),
+    [albums]
+  );
 
   async function onRsvpLookup(e: React.FormEvent) {
     e.preventDefault();
@@ -90,6 +110,8 @@ export default function PublicWeddingPage() {
           "radial-gradient(ellipse 90% 70% at 70% 20%, hsl(162 35% 28%), transparent 55%), linear-gradient(160deg, hsl(158 28% 10%), hsl(150 18% 16%) 55%, hsl(162 22% 12%))",
       };
 
+  let flatPhotoIndex = 0;
+
   return (
     <div className="min-h-screen bg-[hsl(150_18%_97%)] text-foreground">
       <section
@@ -116,6 +138,15 @@ export default function PublicWeddingPage() {
             >
               <a href="#rsvp">RSVP</a>
             </Button>
+            {albums.length > 0 && (
+              <Button
+                asChild
+                variant="outline"
+                className="border-[hsl(150_20%_80%/0.45)] bg-transparent text-[hsl(150_30%_96%)] hover:bg-[hsl(150_20%_100%/0.08)]"
+              >
+                <a href="#gallery">Gallery</a>
+              </Button>
+            )}
             {page.story && (
               <Button
                 asChild
@@ -176,6 +207,47 @@ export default function PublicWeddingPage() {
         </section>
       )}
 
+      {albums.length > 0 && (
+        <section id="gallery" className="mx-auto max-w-5xl px-4 py-20 sm:px-8">
+          <p className="text-center text-xs font-medium tracking-[0.28em] text-[hsl(162_30%_35%)]">
+            GALLERY
+          </p>
+          <h2 className="mt-3 text-center font-display text-3xl tracking-tight sm:text-4xl">
+            Photos
+          </h2>
+          <div className="mt-12 space-y-14">
+            {albums.map((album) => (
+              <div key={album.id}>
+                <h3 className="font-display text-2xl tracking-tight">{album.title}</h3>
+                {album.description && (
+                  <p className="mt-1 text-muted-foreground">{album.description}</p>
+                )}
+                <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                  {album.photos.map((photo) => {
+                    const idx = flatPhotoIndex++;
+                    return (
+                      <button
+                        key={photo.id}
+                        type="button"
+                        className="overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                        onClick={() => setLightboxIndex(idx)}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={mediaUrl(photo.imageUrl)}
+                          alt={photo.caption ?? album.title}
+                          className="aspect-square w-full object-cover transition-transform duration-300 hover:scale-[1.03]"
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section id="rsvp" className="mx-auto max-w-lg px-6 py-20 sm:px-10">
         <p className="text-xs font-medium tracking-[0.28em] text-[hsl(162_30%_35%)]">RSVP</p>
         <h2 className="mt-3 font-display text-3xl tracking-tight">Find your invitation</h2>
@@ -219,6 +291,13 @@ export default function PublicWeddingPage() {
       <footer className="border-t border-[hsl(150_12%_86%)] px-6 py-8 text-center text-xs text-muted-foreground">
         Powered by Aisle
       </footer>
+
+      <ImageLightbox
+        items={lightboxItems}
+        index={lightboxIndex}
+        onClose={() => setLightboxIndex(null)}
+        onIndexChange={setLightboxIndex}
+      />
     </div>
   );
 }

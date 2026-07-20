@@ -58,6 +58,24 @@ export type WeddingPublicPage = {
   publicEnabled: boolean;
 };
 
+export type GalleryPhoto = {
+  id: number;
+  albumId: number;
+  uploadId: string | null;
+  imageUrl: string;
+  caption: string | null;
+  sortOrder: number;
+};
+
+export type GalleryAlbum = {
+  id: number;
+  title: string;
+  description: string | null;
+  sortOrder: number;
+  publicVisible: boolean;
+  photos: GalleryPhoto[];
+};
+
 export type WeddingMember = {
   membershipId: number;
   userId: number;
@@ -481,6 +499,68 @@ export const api = {
     return request<WeddingPublicPage>(`/api/weddings/${weddingId}/public-page`, {
       method: "PUT",
       body: JSON.stringify(payload),
+    });
+  },
+  getPublicGallery(slug: string) {
+    return request<GalleryAlbum[]>(`/api/public/weddings/${slug}/gallery`);
+  },
+  listGalleryAlbums(weddingId: number) {
+    return request<GalleryAlbum[]>(`/api/weddings/${weddingId}/gallery/albums`);
+  },
+  createGalleryAlbum(
+    weddingId: number,
+    payload: {
+      title: string;
+      description?: string;
+      publicVisible?: boolean;
+      sortOrder?: number;
+    }
+  ) {
+    return request<GalleryAlbum>(`/api/weddings/${weddingId}/gallery/albums`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  updateGalleryAlbum(
+    weddingId: number,
+    albumId: number,
+    payload: {
+      title: string;
+      description?: string;
+      publicVisible?: boolean;
+      sortOrder?: number;
+    }
+  ) {
+    return request<GalleryAlbum>(`/api/weddings/${weddingId}/gallery/albums/${albumId}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  },
+  deleteGalleryAlbum(weddingId: number, albumId: number) {
+    return request<void>(`/api/weddings/${weddingId}/gallery/albums/${albumId}`, {
+      method: "DELETE",
+    });
+  },
+  addGalleryPhoto(
+    weddingId: number,
+    albumId: number,
+    payload: {
+      imageUrl: string;
+      uploadId?: string;
+      caption?: string;
+    }
+  ) {
+    return request<GalleryPhoto>(
+      `/api/weddings/${weddingId}/gallery/albums/${albumId}/photos`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }
+    );
+  },
+  deleteGalleryPhoto(weddingId: number, photoId: number) {
+    return request<void>(`/api/weddings/${weddingId}/gallery/photos/${photoId}`, {
+      method: "DELETE",
     });
   },
   listMembers(weddingId: number) {
