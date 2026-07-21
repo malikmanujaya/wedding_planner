@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Images, Plus, Trash2, Upload } from "lucide-react";
+import { Check, Images, Play, Plus, Trash2, Upload } from "lucide-react";
 import {
   api,
   getActiveWeddingId,
@@ -114,6 +114,17 @@ export default function GalleryPage() {
     }
   }
 
+  async function approvePhoto(photoId: number) {
+    if (!weddingId) return;
+    try {
+      await api.setGalleryPhotoApproval(weddingId, photoId, true);
+      await load(weddingId);
+      toast.success("Approved — now visible on the public site");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Approval failed");
+    }
+  }
+
   function startUpload(albumId: number) {
     setUploadAlbumId(albumId);
     fileRef.current?.click();
@@ -125,7 +136,17 @@ export default function GalleryPage() {
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        if (!file.type.startsWith("image/")) continue;
+        const isImage = file.type.startsWith("image/");
+        const isVideo = file.type.startsWith("video/");
+        if (!isImage && !isVideo) continue;
+        if (isImage && file.size > 10 * 1024 * 1024) {
+          toast.error(`${file.name}: images must be under 10 MB`);
+          continue;
+        }
+        if (isVideo && file.size > 100 * 1024 * 1024) {
+          toast.error(`${file.name}: videos must be under 100 MB`);
+          continue;
+        }
         const uploaded = await api.uploadFile(weddingId, file, (p) => {
           const base = (i / files.length) * 100;
           setProgress(Math.round(base + p / files.length));
@@ -136,7 +157,7 @@ export default function GalleryPage() {
         });
       }
       await load(weddingId);
-      toast.success("Photos added");
+      toast.success("Media added");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed");
     } finally {
@@ -164,7 +185,13 @@ export default function GalleryPage() {
     lightboxAlbum?.photos.map((p) => ({
       imageUrl: p.imageUrl,
       caption: p.caption,
+      mediaType: p.mediaType,
     })) ?? [];
+
+  const pendingCount = albums.reduce(
+    (sum, a) => sum + a.photos.filter((p) => !p.approved).length,
+    0
+  );
 
   if (loading) {
     return <p className="text-muted-foreground">Loading gallery…</p>;
@@ -187,8 +214,14 @@ export default function GalleryPage() {
       <div>
         <h1 className="font-display text-3xl tracking-tight">Gallery</h1>
         <p className="mt-1 text-muted-foreground">
-          Albums for your public wedding site. Upload photos or paste image links.
+          Albums for your public wedding site. Upload photos or videos, or paste image links.
         </p>
+        {pendingCount > 0 && (
+          <p className="mt-2 text-sm font-medium text-amber-700">
+            {pendingCount} guest upload{pendingCount === 1 ? "" : "s"} waiting for your approval
+            below.
+          </p>
+        )}
       </div>
 
       <Card>
@@ -220,7 +253,7 @@ export default function GalleryPage() {
       <input
         ref={fileRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/gif"
+        accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime"
         multiple
         className="hidden"
         onChange={(e) => onFilesSelected(e.target.files)}
@@ -327,13 +360,48 @@ export default function GalleryPage() {
                         setLightboxIndex(idx);
                       }}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={mediaUrl(photo.imageUrl)}
-                        alt={photo.caption ?? ""}
-                        className="h-32 w-full object-cover transition-transform group-hover:scale-[1.02]"
-                      />
+                      {photo.mediaType === "VIDEO" ? (
+                        <div className="relative">
+                          <video
+                            src={mediaUrl(photo.imageUrl)}
+                            muted
+                            preload="metadata"
+                            className="h-32 w-full object-cover transition-transform group-hover:scale-[1.02]"
+                          />
+                          <span className="absolute inset-0 flex items-center justify-center">
+                            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black/55 text-white">
+                              <Play className="h-4 w-4" />
+                            </span>
+                          </span>
+                        </div>
+                      ) : (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={mediaUrl(photo.imageUrl)}
+                          alt={photo.caption ?? ""}
+                          className="h-32 w-full object-cover transition-transform group-hover:scale-[1.02]"
+                        />
+                      )}
                     </button>
+                    {!photo.approved && (
+                      <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-amber-500/90 px-2 py-1">
+                        <span className="truncate text-[11px] font-medium text-white">
+                          {photo.contributorName
+                            ? `From ${photo.contributorName}`
+                            : "Pending approval"}
+                        </span>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          className="h-6 px-2 text-[11px]"
+                          onClick={() => approvePhoto(photo.id)}
+                        >
+                          <Check className="h-3 w-3" />
+                          Approve
+                        </Button>
+                      </div>
+                    )}
                     <Button
                       type="button"
                       size="icon"

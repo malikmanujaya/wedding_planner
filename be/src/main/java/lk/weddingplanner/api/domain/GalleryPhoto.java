@@ -39,6 +39,17 @@ public class GalleryPhoto {
     @Column(length = 255)
     private String caption;
 
+    /** PHOTO or VIDEO. */
+    @Column(nullable = false, length = 10, columnDefinition = "varchar(10) default 'PHOTO' not null")
+    private String mediaType = "PHOTO";
+
+    /** Guest-contributed items start unapproved; host uploads are approved. */
+    @Column(nullable = false, columnDefinition = "boolean default true not null")
+    private boolean approved = true;
+
+    @Column(length = 120)
+    private String contributorName;
+
     @Column(nullable = false)
     private int sortOrder = 0;
 

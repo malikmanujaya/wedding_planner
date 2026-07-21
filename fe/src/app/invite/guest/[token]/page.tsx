@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
+import { Camera } from "lucide-react";
 import { api, type PublicInvite } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,48 @@ export default function GuestInvitePage() {
   const [meal, setMeal] = useState("");
   const [notes, setNotes] = useState("");
   const [saved, setSaved] = useState(false);
+  const [shareCaption, setShareCaption] = useState("");
+  const [shareProgress, setShareProgress] = useState<number | null>(null);
+  const [sharedCount, setSharedCount] = useState(0);
+  const [shareError, setShareError] = useState<string | null>(null);
+  const shareFileRef = useRef<HTMLInputElement>(null);
+
+  async function onShareFiles(files: FileList | null) {
+    if (!token || !files?.length) return;
+    setShareError(null);
+    setShareProgress(0);
+    let uploaded = 0;
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const isImage = file.type.startsWith("image/");
+        const isVideo = file.type.startsWith("video/");
+        if (!isImage && !isVideo) continue;
+        if (isImage && file.size > 10 * 1024 * 1024) {
+          setShareError(`${file.name}: images must be under 10 MB`);
+          continue;
+        }
+        if (isVideo && file.size > 100 * 1024 * 1024) {
+          setShareError(`${file.name}: videos must be under 100 MB`);
+          continue;
+        }
+        await api.guestUploadToGallery(token, file, shareCaption.trim() || undefined, (p) => {
+          const base = (i / files.length) * 100;
+          setShareProgress(Math.round(base + p / files.length));
+        });
+        uploaded += 1;
+      }
+      if (uploaded > 0) {
+        setSharedCount((c) => c + uploaded);
+        setShareCaption("");
+      }
+    } catch (err) {
+      setShareError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setShareProgress(null);
+      if (shareFileRef.current) shareFileRef.current.value = "";
+    }
+  }
 
   useEffect(() => {
     if (!token) return;
@@ -167,6 +210,65 @@ export default function GuestInvitePage() {
                 {saving ? "Saving…" : "Send RSVP"}
               </Button>
             </form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 font-display text-2xl">
+              <Camera className="h-5 w-5" />
+              Share your photos
+            </CardTitle>
+            <CardDescription>
+              Took a great photo or video? Send it to the couple — it will appear in their
+              gallery once they approve it.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Input
+              value={shareCaption}
+              onChange={(e) => setShareCaption(e.target.value)}
+              placeholder="Caption (optional)"
+              disabled={shareProgress != null}
+            />
+            <input
+              ref={shareFileRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime"
+              multiple
+              className="hidden"
+              onChange={(e) => onShareFiles(e.target.files)}
+            />
+            {shareProgress != null ? (
+              <div className="rounded-md border bg-muted/40 px-4 py-3">
+                <p className="mb-2 text-sm font-medium">Uploading… {shareProgress}%</p>
+                <div className="h-2 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all"
+                    style={{ width: `${shareProgress}%` }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full"
+                onClick={() => shareFileRef.current?.click()}
+              >
+                <Camera className="h-4 w-4" />
+                Choose photos or videos
+              </Button>
+            )}
+            {shareError && <p className="text-sm text-destructive">{shareError}</p>}
+            {sharedCount > 0 && (
+              <p className="text-sm text-[hsl(162_35%_30%)]">
+                {sharedCount} file{sharedCount === 1 ? "" : "s"} sent to the couple — thank you!
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Photos up to 10 MB, videos up to 100 MB (MP4/WebM).
+            </p>
           </CardContent>
         </Card>
       </div>

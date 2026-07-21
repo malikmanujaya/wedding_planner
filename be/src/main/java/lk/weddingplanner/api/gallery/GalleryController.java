@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
@@ -66,6 +68,23 @@ public class GalleryController {
             @PathVariable Long albumId,
             @Valid @RequestBody AddPhotoRequest request) {
         return galleryService.addPhoto(principal, weddingId, albumId, request);
+    }
+
+    @PutMapping("/api/weddings/{weddingId}/gallery/photos/{photoId}/approval")
+    public GalleryPhotoResponse setApproval(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long weddingId,
+            @PathVariable Long photoId,
+            @RequestParam boolean approved) {
+        return galleryService.setPhotoApproval(principal, weddingId, photoId, approved);
+    }
+
+    @PostMapping("/api/public/invites/{token}/gallery")
+    public GalleryPhotoResponse guestContribute(
+            @PathVariable String token,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "caption", required = false) String caption) {
+        return galleryService.guestContribute(token, file, caption);
     }
 
     @DeleteMapping("/api/weddings/{weddingId}/gallery/photos/{photoId}")

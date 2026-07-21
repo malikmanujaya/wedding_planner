@@ -50,7 +50,7 @@ Say in chat: `start A-11` / `done B-03` to update.
 |----|------|-------|--------|-----:|--------|
 | A-10 | BE: checklist / task entity, CRUD, filters, assignee | Cursor | S1 | 0.5 | done |
 | A-11 | FE: task list UI — status, due date, assignee, filters | Cursor | S1 | 1 | done |
-| A-12 | Seed default wedding checklist templates (optional) | Cursor | S1 | 0.5 | pending |
+| A-12 | Seed default wedding checklist templates (optional) | Cursor | S1 | 0.5 | done |
 
 ### Crew
 
@@ -138,8 +138,8 @@ Say in chat: `start A-11` / `done B-03` to update.
 |----|------|-------|--------|-----:|--------|
 | C-10 | Local disk uploads (`uploads/` + file IDs); R2/S3 later | Cursor | S6 | 1 | done |
 | C-11 | Photo gallery: upload, album, lightbox, permissions | Cursor | S6 | 1.5 | done |
-| C-12 | Video upload + playback (Stream/Mux or direct MP4) | Cursor | S7 | 2.5 | pending |
-| C-13 | Guest contribution uploads (optional moderation) | Cursor | S7 | 1 | pending |
+| C-12 | Video upload + playback (Stream/Mux or direct MP4) | Cursor | S7 | 2.5 | done |
+| C-13 | Guest contribution uploads (optional moderation) | Cursor | S7 | 1 | done |
 
 ### Gifts + PayHere
 

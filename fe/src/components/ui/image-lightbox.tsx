@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 type LightboxItem = {
   imageUrl: string;
   caption?: string | null;
+  mediaType?: "PHOTO" | "VIDEO";
 };
 
 type Props = {
@@ -94,12 +95,21 @@ export function ImageLightbox({ items, index, onClose, onIndexChange }: Props) {
         className="flex max-h-[90vh] max-w-5xl flex-col items-center gap-3"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={mediaUrl(item.imageUrl)}
-          alt={item.caption ?? ""}
-          className="max-h-[80vh] w-auto max-w-full object-contain"
-        />
+        {item.mediaType === "VIDEO" ? (
+          <video
+            src={mediaUrl(item.imageUrl)}
+            controls
+            autoPlay
+            className="max-h-[80vh] w-auto max-w-full object-contain"
+          />
+        ) : (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={mediaUrl(item.imageUrl)}
+            alt={item.caption ?? ""}
+            className="max-h-[80vh] w-auto max-w-full object-contain"
+          />
+        )}
         <div className="flex items-center gap-3 text-sm text-[hsl(150_20%_85%)]">
           {item.caption && <span>{item.caption}</span>}
           <span className="tabular-nums opacity-70">

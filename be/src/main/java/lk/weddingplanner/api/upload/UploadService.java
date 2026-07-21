@@ -31,8 +31,12 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class UploadService {
 
-    private static final Set<String> ALLOWED_TYPES =
+    private static final Set<String> IMAGE_TYPES =
             Set.of("image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif");
+    private static final Set<String> VIDEO_TYPES =
+            Set.of("video/mp4", "video/webm", "video/quicktime");
+    private static final long MAX_IMAGE_BYTES = 10L * 1024 * 1024;
+    private static final long MAX_VIDEO_BYTES = 100L * 1024 * 1024;
 
     private final UploadRepository uploadRepository;
     private final WeddingAccessService weddingAccessService;
@@ -51,14 +55,28 @@ public class UploadService {
     @Transactional
     public UploadResponse store(UserPrincipal principal, Long weddingId, MultipartFile file) {
         Wedding wedding = weddingAccessService.requireMemberWedding(principal, weddingId);
+        return storeForWedding(wedding, principal.getId(), file);
+    }
+
+    @Transactional
+    public UploadResponse storeForWedding(Wedding wedding, Long uploadedByUserId, MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new ApiException("File is required", HttpStatus.BAD_REQUEST);
         }
 
         String contentType = normalizeContentType(file.getContentType(), file.getOriginalFilename());
-        if (!ALLOWED_TYPES.contains(contentType)) {
+        boolean isImage = IMAGE_TYPES.contains(contentType);
+        boolean isVideo = VIDEO_TYPES.contains(contentType);
+        if (!isImage && !isVideo) {
             throw new ApiException(
-                    "Only JPEG, PNG, WebP, or GIF images are allowed", HttpStatus.BAD_REQUEST);
+                    "Only JPEG, PNG, WebP, GIF images or MP4/WebM videos are allowed",
+                    HttpStatus.BAD_REQUEST);
+        }
+        if (isImage && file.getSize() > MAX_IMAGE_BYTES) {
+            throw new ApiException("Images must be under 10 MB", HttpStatus.BAD_REQUEST);
+        }
+        if (isVideo && file.getSize() > MAX_VIDEO_BYTES) {
+            throw new ApiException("Videos must be under 100 MB", HttpStatus.BAD_REQUEST);
         }
 
         String original =
@@ -86,7 +104,7 @@ public class UploadService {
         upload.setStoredFilename(storedFilename);
         upload.setContentType(contentType);
         upload.setSizeBytes(file.getSize());
-        upload.setUploadedByUserId(principal.getId());
+        upload.setUploadedByUserId(uploadedByUserId);
         upload.setCreatedAt(Instant.now());
         uploadRepository.save(upload);
 
@@ -145,6 +163,9 @@ public class UploadService {
         if (name.endsWith(".webp")) return "image/webp";
         if (name.endsWith(".gif")) return "image/gif";
         if (name.endsWith(".jpg") || name.endsWith(".jpeg")) return "image/jpeg";
+        if (name.endsWith(".mp4")) return "video/mp4";
+        if (name.endsWith(".webm")) return "video/webm";
+        if (name.endsWith(".mov")) return "video/quicktime";
         return "application/octet-stream";
     }
 
@@ -153,6 +174,9 @@ public class UploadService {
             case "image/png" -> ".png";
             case "image/webp" -> ".webp";
             case "image/gif" -> ".gif";
+            case "video/mp4" -> ".mp4";
+            case "video/webm" -> ".webm";
+            case "video/quicktime" -> ".mov";
             default -> {
                 String lower = original.toLowerCase(Locale.ROOT);
                 if (lower.endsWith(".png")) yield ".png";

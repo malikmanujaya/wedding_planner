@@ -4,11 +4,14 @@ import java.text.Normalizer;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
+import java.time.LocalDate;
 import lk.weddingplanner.api.common.ApiException;
+import lk.weddingplanner.api.domain.ChecklistTask;
 import lk.weddingplanner.api.domain.MembershipRole;
 import lk.weddingplanner.api.domain.User;
 import lk.weddingplanner.api.domain.Wedding;
 import lk.weddingplanner.api.domain.WeddingMembership;
+import lk.weddingplanner.api.repository.ChecklistTaskRepository;
 import lk.weddingplanner.api.repository.UserRepository;
 import lk.weddingplanner.api.repository.WeddingMembershipRepository;
 import lk.weddingplanner.api.repository.WeddingRepository;
@@ -28,9 +31,26 @@ public class WeddingService {
 
     private static final Pattern NON_LATIN = Pattern.compile("[^\\w-]");
 
+    /** Default checklist: task title + months before the wedding it should be done. */
+    private static final String[][] DEFAULT_CHECKLIST = {
+        {"Set your budget", "12"},
+        {"Draft the guest list", "11"},
+        {"Book the venue", "10"},
+        {"Book the photographer", "9"},
+        {"Book catering / menu tasting", "8"},
+        {"Choose attire (bride & groom)", "6"},
+        {"Send invitations", "3"},
+        {"Book entertainment / DJ", "3"},
+        {"Order the cake", "2"},
+        {"Finalize the seating plan", "1"},
+        {"Confirm all vendors", "1"},
+        {"Collect RSVPs & final headcount", "1"},
+    };
+
     private final WeddingRepository weddingRepository;
     private final WeddingMembershipRepository membershipRepository;
     private final UserRepository userRepository;
+    private final ChecklistTaskRepository checklistTaskRepository;
 
     @Transactional
     public List<WeddingResponse> listMine(UserPrincipal principal) {
@@ -65,7 +85,22 @@ public class WeddingService {
         membership.setRole(MembershipRole.OWNER);
         membershipRepository.save(membership);
 
+        seedChecklist(wedding);
+
         return toResponse(membership);
+    }
+
+    private void seedChecklist(Wedding wedding) {
+        LocalDate weddingDate = wedding.getWeddingDate();
+        for (String[] entry : DEFAULT_CHECKLIST) {
+            ChecklistTask task = new ChecklistTask();
+            task.setWedding(wedding);
+            task.setTitle(entry[0]);
+            if (weddingDate != null) {
+                task.setDueDate(weddingDate.minusMonths(Long.parseLong(entry[1])));
+            }
+            checklistTaskRepository.save(task);
+        }
     }
 
     @Transactional

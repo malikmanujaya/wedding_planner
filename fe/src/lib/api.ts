@@ -64,6 +64,9 @@ export type GalleryPhoto = {
   uploadId: string | null;
   imageUrl: string;
   caption: string | null;
+  mediaType: "PHOTO" | "VIDEO";
+  approved: boolean;
+  contributorName: string | null;
   sortOrder: number;
 };
 
@@ -610,6 +613,7 @@ export const api = {
       imageUrl: string;
       uploadId?: string;
       caption?: string;
+      mediaType?: "PHOTO" | "VIDEO";
     }
   ) {
     return request<GalleryPhoto>(
@@ -623,6 +627,44 @@ export const api = {
   deleteGalleryPhoto(weddingId: number, photoId: number) {
     return request<void>(`/api/weddings/${weddingId}/gallery/photos/${photoId}`, {
       method: "DELETE",
+    });
+  },
+  setGalleryPhotoApproval(weddingId: number, photoId: number, approved: boolean) {
+    return request<GalleryPhoto>(
+      `/api/weddings/${weddingId}/gallery/photos/${photoId}/approval?approved=${approved}`,
+      { method: "PUT" }
+    );
+  },
+  guestUploadToGallery(
+    token: string,
+    file: File,
+    caption?: string,
+    onProgress?: (percent: number) => void
+  ): Promise<GalleryPhoto> {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `${API_URL}/api/public/invites/${token}/gallery`);
+      xhr.upload.onprogress = (e) => {
+        if (!e.lengthComputable || !onProgress) return;
+        onProgress(Math.round((e.loaded / e.total) * 100));
+      };
+      xhr.onload = () => {
+        try {
+          const body = xhr.responseText ? JSON.parse(xhr.responseText) : null;
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(body as GalleryPhoto);
+            return;
+          }
+          reject(new Error(body?.error || body?.message || `Upload failed (${xhr.status})`));
+        } catch {
+          reject(new Error(`Upload failed (${xhr.status})`));
+        }
+      };
+      xhr.onerror = () => reject(new Error("Upload failed"));
+      const form = new FormData();
+      form.append("file", file);
+      if (caption) form.append("caption", caption);
+      xhr.send(form);
     });
   },
   getPublicRegistry(slug: string) {

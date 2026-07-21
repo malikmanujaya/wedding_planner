@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { Play } from "lucide-react";
 import {
   api,
   mediaUrl,
@@ -89,6 +90,7 @@ export default function PublicWeddingPage() {
         a.photos.map((p) => ({
           imageUrl: p.imageUrl,
           caption: p.caption || a.title,
+          mediaType: p.mediaType,
         }))
       ),
     [albums]
@@ -319,12 +321,28 @@ export default function PublicWeddingPage() {
                         className="overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                         onClick={() => setLightboxIndex(idx)}
                       >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={mediaUrl(photo.imageUrl)}
-                          alt={photo.caption ?? album.title}
-                          className="aspect-square w-full object-cover transition-transform duration-300 hover:scale-[1.03]"
-                        />
+                        {photo.mediaType === "VIDEO" ? (
+                          <span className="relative block">
+                            <video
+                              src={mediaUrl(photo.imageUrl)}
+                              muted
+                              preload="metadata"
+                              className="aspect-square w-full object-cover transition-transform duration-300 hover:scale-[1.03]"
+                            />
+                            <span className="absolute inset-0 flex items-center justify-center">
+                              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-black/55 text-white">
+                                <Play className="h-4 w-4" />
+                              </span>
+                            </span>
+                          </span>
+                        ) : (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            src={mediaUrl(photo.imageUrl)}
+                            alt={photo.caption ?? album.title}
+                            className="aspect-square w-full object-cover transition-transform duration-300 hover:scale-[1.03]"
+                          />
+                        )}
                       </button>
                     );
                   })}
