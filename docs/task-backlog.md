@@ -145,8 +145,8 @@ Say in chat: `start A-11` / `done B-03` to update.
 
 | ID | Task | Owner | Sprint | Days | Status |
 |----|------|-------|--------|-----:|--------|
-| C-20 | BE: gift registry items + cash fund goals | Cursor | S7 | 1 | pending |
-| C-21 | FE: registry browse + claim/contribute UI | Cursor | S7 | 1.5 | pending |
+| C-20 | BE: gift registry items + cash fund goals | Cursor | S7 | 1 | done |
+| C-21 | FE: registry browse + claim/contribute UI | Cursor | S7 | 1.5 | done |
 | C-22 | Client: PayHere merchant account + sandbox keys | Client | S7 | 0 | pending |
 | C-23 | PayHere checkout + webhook reconcile | Cursor | S7 | 2 | pending |
 | C-24 | Cash fund contributions ledger + receipts | Cursor | S7 | 1 | pending |
