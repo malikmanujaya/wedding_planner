@@ -18,6 +18,7 @@ import {
   Globe,
   Images,
   Gift,
+  Mail,
 } from "lucide-react";
 import { api, getStoredUser, startAuthSession } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -46,6 +47,7 @@ const nav = [
   { href: "/vendors", label: "Vendors", icon: Store },
   { href: "/gallery", label: "Gallery", icon: Images },
   { href: "/gifts", label: "Gifts", icon: Gift },
+  { href: "/thank-you", label: "Thank-you card", icon: Mail },
   { href: "/public-page", label: "Public page", icon: Globe },
 ];
 

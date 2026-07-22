@@ -41,7 +41,7 @@ Say in chat: `start A-11` / `done B-03` to update.
 | A-04 | Roles: couple, crew, vendor, guest, admin + guards | Cursor | S1 | 0.5 | done |
 | A-05 | Create / switch wedding (multi-wedding tenancy) | Cursor | S1 | 0.5 | done |
 | A-06 | Next shell: layout, nav, wedding context provider | Cursor | S1 | 0.5 | done |
-| A-07 | OpenAPI export from Spring + typed FE client | Cursor | S1 | 0.5 | pending |
+| A-07 | OpenAPI export from Spring + typed FE client | Cursor | S1 | 0.5 | done |
 | A-08 | Deploy staging: FE + BE + Postgres | You | S1 | 0.5 | pending |
 
 ### Checklist
@@ -155,7 +155,7 @@ Say in chat: `start A-11` / `done B-03` to update.
 
 | ID | Task | Owner | Sprint | Days | Status |
 |----|------|-------|--------|-----:|--------|
-| C-30 | Thank-you card upload / template store | Cursor | S8 | 1 | pending |
+| C-30 | Thank-you card upload / template store | Cursor | S8 | 1 | done |
 | C-31 | Send thank-you via WhatsApp to selected guests | Cursor | S8 | 1.5 | pending |
 | C-32 | Pkg C UAT: public site + gifts + payments + cards | You | S8 | 0.5 | pending |
 

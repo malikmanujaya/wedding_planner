@@ -130,6 +130,28 @@ export type CashContribution = {
   createdAt: string;
 };
 
+export type ThankYouCard = {
+  id: number;
+  templateKey: string;
+  message: string;
+  signature: string | null;
+  imageUrl: string | null;
+  designedCardUrl: string | null;
+  updatedAt: string;
+};
+
+export type PublicThankYou = {
+  templateKey: string;
+  message: string;
+  signature: string | null;
+  imageUrl: string | null;
+  designedCardUrl: string | null;
+  guestName: string;
+  coupleNames: string | null;
+  weddingTitle: string;
+  weddingDate: string | null;
+};
+
 export type PublicRegistry = {
   gifts: GiftItem[];
   cashFunds: CashFund[];
@@ -666,6 +688,27 @@ export const api = {
       if (caption) form.append("caption", caption);
       xhr.send(form);
     });
+  },
+  getThankYouCard(weddingId: number) {
+    return request<ThankYouCard | undefined>(`/api/weddings/${weddingId}/thank-you-card`);
+  },
+  saveThankYouCard(
+    weddingId: number,
+    payload: {
+      templateKey: string;
+      message: string;
+      signature?: string;
+      imageUrl?: string;
+      designedCardUrl?: string;
+    }
+  ) {
+    return request<ThankYouCard>(`/api/weddings/${weddingId}/thank-you-card`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  },
+  getPublicThankYou(token: string) {
+    return request<PublicThankYou>(`/api/public/invites/${token}/thank-you`);
   },
   getPublicRegistry(slug: string) {
     return request<PublicRegistry>(`/api/public/weddings/${slug}/registry`);
