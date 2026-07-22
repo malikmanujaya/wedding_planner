@@ -9,6 +9,8 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   Store,
   Users,
   UsersRound,
@@ -27,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,6 +38,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+const SIDEBAR_KEY = "wp_sidebar_collapsed";
 
 const nav = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -50,10 +55,16 @@ const nav = [
   { href: "/public-page", label: "Public page", icon: Globe },
 ];
 
-function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+function NavLinks({
+  onNavigate,
+  collapsed,
+}: {
+  onNavigate?: () => void;
+  collapsed?: boolean;
+}) {
   const pathname = usePathname();
   return (
-    <nav className="flex flex-col gap-1 px-3">
+    <nav className={cn("flex flex-col gap-1", collapsed ? "px-2" : "px-3")}>
       {nav.map((item) => {
         const Icon = item.icon;
         const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -62,15 +73,17 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             key={item.href}
             href={item.href}
             onClick={onNavigate}
+            title={collapsed ? item.label : undefined}
             className={cn(
-              "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+              "flex items-center rounded-md text-sm transition-colors",
+              collapsed ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2",
               active
                 ? "bg-sidebar-accent text-sidebar-accent-foreground"
                 : "text-sidebar-foreground/75 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
             )}
           >
             <Icon className="h-4 w-4 shrink-0" />
-            {item.label}
+            {!collapsed && <span className="truncate">{item.label}</span>}
           </Link>
         );
       })}
@@ -78,34 +91,51 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarBody({
+  onNavigate,
+  collapsed,
+}: {
+  onNavigate?: () => void;
+  collapsed?: boolean;
+}) {
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 px-5 py-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-sm font-semibold text-primary-foreground">
+      <div
+        className={cn(
+          "flex items-center gap-2 py-5",
+          collapsed ? "justify-center px-2" : "px-5"
+        )}
+      >
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-sm font-semibold text-primary-foreground">
           {theme.brand.mark}
         </div>
-        <div>
-          <p className="font-display text-lg leading-none text-sidebar-foreground">
-            {theme.brand.name}
-          </p>
-          <p className="text-[11px] text-sidebar-foreground/55">
-            {theme.brand.productLine}
-          </p>
-        </div>
+        {!collapsed && (
+          <div className="min-w-0">
+            <p className="font-display text-lg leading-none text-sidebar-foreground">
+              {theme.brand.name}
+            </p>
+            <p className="text-[11px] text-sidebar-foreground/55">
+              {theme.brand.productLine}
+            </p>
+          </div>
+        )}
       </div>
       <Separator className="bg-sidebar-border" />
-      <div className="mt-4 flex-1">
-        <NavLinks onNavigate={onNavigate} />
+      <div className="mt-4 flex-1 overflow-y-auto">
+        <NavLinks onNavigate={onNavigate} collapsed={collapsed} />
       </div>
-      <div className="px-3 pb-4">
+      <div className={cn("pb-4", collapsed ? "px-2" : "px-3")}>
         <Link
           href="/"
           onClick={onNavigate}
-          className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/60"
+          title={collapsed ? "Marketing site" : undefined}
+          className={cn(
+            "flex items-center rounded-md text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/60",
+            collapsed ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2"
+          )}
         >
-          <Home className="h-4 w-4" />
-          Marketing site
+          <Home className="h-4 w-4 shrink-0" />
+          {!collapsed && <span>Marketing site</span>}
         </Link>
       </div>
     </div>
@@ -117,6 +147,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [name, setName] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     const user = getStoredUser();
@@ -128,6 +159,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setEmail(user.email);
     startAuthSession();
   }, [router]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem(SIDEBAR_KEY);
+    if (stored === "1") setCollapsed(true);
+  }, []);
+
+  function toggleSidebar() {
+    setCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem(SIDEBAR_KEY, next ? "1" : "0");
+      return next;
+    });
+  }
 
   async function logout() {
     await api.logout();
@@ -152,24 +196,47 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-background">
       <Toaster />
-      <aside className="hidden w-64 shrink-0 border-r border-sidebar-border bg-sidebar md:block">
-        <SidebarBody />
+      <aside
+        className={cn(
+          "hidden shrink-0 border-r border-sidebar-border bg-sidebar transition-[width] duration-200 ease-out md:block",
+          collapsed ? "w-[4.5rem]" : "w-64"
+        )}
+      >
+        <SidebarBody collapsed={collapsed} />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b bg-card/90 px-4 backdrop-blur">
-          <div className="flex items-center gap-2">
+        <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-3 border-b bg-card/90 px-4 backdrop-blur">
+          <div className="flex min-w-0 items-center gap-2">
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="md:hidden">
                   <Menu className="h-5 w-5" />
+                  <span className="sr-only">Open menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="p-0">
+              <SheetContent side="left" className="w-64 p-0">
                 <SidebarBody onNavigate={() => setMobileOpen(false)} />
               </SheetContent>
             </Sheet>
-            <p className="text-sm text-muted-foreground md:hidden">{theme.brand.name}</p>
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="hidden md:inline-flex"
+              onClick={toggleSidebar}
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {collapsed ? (
+                <PanelLeftOpen className="h-5 w-5" />
+              ) : (
+                <PanelLeftClose className="h-5 w-5" />
+              )}
+            </Button>
+
+            <AppBreadcrumb className="min-w-0" />
           </div>
 
           <DropdownMenu>
