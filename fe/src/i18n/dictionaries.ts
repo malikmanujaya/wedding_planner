@@ -119,7 +119,6 @@ const en: Dictionary = {
     "Vendor tracker",
     "Public microsite",
     "Photo gallery",
-    "Gift registry",
     "Entrance check-in",
     "Thank-you cards",
   ],
@@ -138,7 +137,7 @@ const en: Dictionary = {
       },
       {
         title: "Share the day",
-        body: "A public page with countdown, story, gallery, gifts, and RSVP lookup for guests.",
+        body: "A public page with countdown, story, gallery, and RSVP lookup for guests.",
       },
     ],
   },
@@ -168,7 +167,7 @@ const en: Dictionary = {
     items: [
       {
         title: "Couples",
-        body: "Own the big picture — guest list, vendors, public page, gifts, and thank-yous.",
+        body: "Own the big picture — guest list, vendors, public page, and thank-yous.",
       },
       {
         title: "Crew",
@@ -176,7 +175,7 @@ const en: Dictionary = {
       },
       {
         title: "Guests",
-        body: "RSVP, find their seat, browse the gallery, and claim gifts from one link.",
+        body: "RSVP, find their seat, and browse the gallery from one link.",
       },
     ],
   },
@@ -195,8 +194,8 @@ const en: Dictionary = {
     eyebrow: "Guest experience",
     title: "A public page guests actually open",
     support:
-      "Countdown, story, gallery, gifts, and RSVP — one beautiful link you can share anywhere.",
-    tags: ["Countdown", "Our story", "Gallery", "Gifts", "RSVP"],
+      "Countdown, story, gallery, and RSVP — one beautiful link you can share anywhere.",
+    tags: ["Countdown", "Our story", "Gallery", "RSVP"],
   },
   cta: {
     title: "Start with one wedding.",
@@ -256,7 +255,6 @@ const si: Dictionary = {
     "සැපයුම්කරු ලුහුබැඳීම",
     "පොදු වෙබ් පිටුව",
     "ඡායාරූප ගැලරිය",
-    "තෑගි ලේඛනය",
     "පිවිසුම් ලියාපදිංචිය",
     "ස්තුති කාඩ්පත්",
   ],
@@ -276,7 +274,7 @@ const si: Dictionary = {
       },
       {
         title: "දිනය බෙදාගන්න",
-        body: "ගණන් කිරීම, කතාව, ගැලරිය, තෑගි සහ RSVP සහිත පොදු පිටුවක්.",
+        body: "ගණන් කිරීම, කතාව, ගැලරිය සහ RSVP සහිත පොදු පිටුවක්.",
       },
     ],
   },
@@ -306,7 +304,7 @@ const si: Dictionary = {
     items: [
       {
         title: "යුවළ",
-        body: "විශාල චිත්‍රය හසුරුවන්න — අමුත්තන්, සැපයුම්කරුවන්, පොදු පිටුව, තෑගි සහ ස්තුති.",
+        body: "විශාල චිත්‍රය හසුරුවන්න — අමුත්තන්, සැපයුම්කරුවන්, පොදු පිටුව සහ ස්තුති.",
       },
       {
         title: "කණ්ඩායම",
@@ -314,7 +312,7 @@ const si: Dictionary = {
       },
       {
         title: "අමුත්තන්",
-        body: "RSVP කරන්න, අසුන සොයන්න, ගැලරිය බලන්න, එක් සබැඳියකින් තෑගි ලබාගන්න.",
+        body: "RSVP කරන්න, අසුන සොයන්න, එක් සබැඳියකින් ගැලරිය බලන්න.",
       },
     ],
   },
@@ -333,8 +331,8 @@ const si: Dictionary = {
     eyebrow: "අමුත්තන්ගේ අත්දැකීම",
     title: "අමුත්තන් ඇත්තටම විවෘත කරන පොදු පිටුවක්",
     support:
-      "ගණන් කිරීම, කතාව, ගැලරිය, තෑගි සහ RSVP — ඕනෑම තැනක බෙදාගත හැකි එක් ලස්සන සබැඳියක්.",
-    tags: ["ගණන් කිරීම", "අපගේ කතාව", "ගැලරිය", "තෑගි", "RSVP"],
+      "ගණන් කිරීම, කතාව, ගැලරිය සහ RSVP — ඕනෑම තැනක බෙදාගත හැකි එක් ලස්සන සබැඳියක්.",
+    tags: ["ගණන් කිරීම", "අපගේ කතාව", "ගැලරිය", "RSVP"],
   },
   cta: {
     title: "එක් විවාහයකින් ආරම්භ කරන්න.",
@@ -394,7 +392,6 @@ const ta: Dictionary = {
     "விற்பனையாளர் கண்காணிப்பு",
     "பொது இணையதளம்",
     "புகைப்பட தொகுப்பு",
-    "பரிசு பட்டியல்",
     "நுழைவு பதிவு",
     "நன்றி அட்டைகள்",
   ],
@@ -414,7 +411,7 @@ const ta: Dictionary = {
       },
       {
         title: "நாளைப் பகிருங்கள்",
-        body: "எண்ணிக்கை, கதை, தொகுப்பு, பரிசுகள் மற்றும் RSVP கொண்ட பொது பக்கம்.",
+        body: "எண்ணிக்கை, கதை, தொகுப்பு மற்றும் RSVP கொண்ட பொது பக்கம்.",
       },
     ],
   },
@@ -444,7 +441,7 @@ const ta: Dictionary = {
     items: [
       {
         title: "தம்பதிகள்",
-        body: "பெரிய படத்தை நிர்வகியுங்கள் — விருந்தினர்கள், விற்பனையாளர்கள், பொது பக்கம், பரிசுகள், நன்றிகள்.",
+        body: "பெரிய படத்தை நிர்வகியுங்கள் — விருந்தினர்கள், விற்பனையாளர்கள், பொது பக்கம், நன்றிகள்.",
       },
       {
         title: "குழு",
@@ -452,7 +449,7 @@ const ta: Dictionary = {
       },
       {
         title: "விருந்தினர்கள்",
-        body: "RSVP செய்யுங்கள், இருக்கையைக் கண்டறியுங்கள், தொகுப்பைப் பார்த்து ஒரே இணைப்பில் பரிசுகளைப் பெறுங்கள்.",
+        body: "RSVP செய்யுங்கள், இருக்கையைக் கண்டறியுங்கள், ஒரே இணைப்பில் தொகுப்பைப் பாருங்கள்.",
       },
     ],
   },
@@ -471,8 +468,8 @@ const ta: Dictionary = {
     eyebrow: "விருந்தினர் அனுபவம்",
     title: "விருந்தினர்கள் உண்மையில் திறக்கும் பொது பக்கம்",
     support:
-      "எண்ணிக்கை, கதை, தொகுப்பு, பரிசுகள் மற்றும் RSVP — எங்கும் பகிரக்கூடிய அழகான இணைப்பு.",
-    tags: ["எண்ணிக்கை", "எங்கள் கதை", "தொகுப்பு", "பரிசுகள்", "RSVP"],
+      "எண்ணிக்கை, கதை, தொகுப்பு மற்றும் RSVP — எங்கும் பகிரக்கூடிய அழகான இணைப்பு.",
+    tags: ["எண்ணிக்கை", "எங்கள் கதை", "தொகுப்பு", "RSVP"],
   },
   cta: {
     title: "ஒரு திருமணத்துடன் தொடங்குங்கள்.",

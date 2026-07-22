@@ -382,7 +382,7 @@ export default function CrewPage() {
                   <FormItem>
                     <FormLabel>Responsibilities</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. Guest check-in, gift table" {...field} />
+                      <Input placeholder="e.g. Guest check-in, vendor liaison" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

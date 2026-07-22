@@ -25,7 +25,7 @@ export const theme = {
       "Entrance check-in, seat finder, and live attendance — so the floor stays calm when the room fills up.",
     homePublicTitle: "A public page guests actually open",
     homePublicSupport:
-      "Countdown, story, gallery, gifts, and RSVP — one beautiful link you can share anywhere.",
+      "Countdown, story, gallery, and RSVP — one beautiful link you can share anywhere.",
     homeCtaTitle: "Start with one wedding.",
     homeCtaSupport: "Create your workspace in minutes. Invite crew when you’re ready.",
     loginTitle: "Welcome back",
@@ -93,7 +93,6 @@ export const theme = {
     "Vendor tracker",
     "Public microsite",
     "Photo gallery",
-    "Gift registry",
     "Entrance check-in",
     "Thank-you cards",
   ] as const,
@@ -111,7 +110,7 @@ export const theme = {
     },
     {
       title: "Share the day",
-      body: "A public page with countdown, story, gallery, gifts, and RSVP lookup for guests.",
+      body: "A public page with countdown, story, gallery, and RSVP lookup for guests.",
       imageKey: "publicImage" as const,
     },
   ] as const,
@@ -137,7 +136,7 @@ export const theme = {
   roles: [
     {
       title: "Couples",
-      body: "Own the big picture — guest list, vendors, public page, gifts, and thank-yous.",
+      body: "Own the big picture — guest list, vendors, public page, and thank-yous.",
     },
     {
       title: "Crew",
@@ -145,7 +144,7 @@ export const theme = {
     },
     {
       title: "Guests",
-      body: "RSVP, find their seat, browse the gallery, and claim gifts from one link.",
+      body: "RSVP, find their seat, and browse the gallery from one link.",
     },
   ] as const,
 } as const;

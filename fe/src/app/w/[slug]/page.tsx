@@ -7,23 +7,12 @@ import { Play } from "lucide-react";
 import {
   api,
   mediaUrl,
-  type CashFund,
   type GalleryAlbum,
-  type GiftItem,
   type PublicWedding,
 } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ImageLightbox } from "@/components/ui/image-lightbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 
 function daysUntil(dateStr: string | null) {
   if (!dateStr) return null;
@@ -41,8 +30,6 @@ export default function PublicWeddingPage() {
   const router = useRouter();
   const [page, setPage] = useState<PublicWedding | null>(null);
   const [albums, setAlbums] = useState<GalleryAlbum[]>([]);
-  const [gifts, setGifts] = useState<GiftItem[]>([]);
-  const [funds, setFunds] = useState<CashFund[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [fullName, setFullName] = useState("");
@@ -51,32 +38,12 @@ export default function PublicWeddingPage() {
   const [looking, setLooking] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  const [claimGift, setClaimGift] = useState<GiftItem | null>(null);
-  const [claimName, setClaimName] = useState("");
-  const [claimEmail, setClaimEmail] = useState("");
-  const [claimMessage, setClaimMessage] = useState("");
-  const [claiming, setClaiming] = useState(false);
-
-  const [contributeFund, setContributeFund] = useState<CashFund | null>(null);
-  const [contribName, setContribName] = useState("");
-  const [contribEmail, setContribEmail] = useState("");
-  const [contribAmount, setContribAmount] = useState("");
-  const [contribMessage, setContribMessage] = useState("");
-  const [contributing, setContributing] = useState(false);
-  const [contribDone, setContribDone] = useState(false);
-
   useEffect(() => {
     if (!slug) return;
-    Promise.all([
-      api.getPublicWedding(slug),
-      api.getPublicGallery(slug),
-      api.getPublicRegistry(slug),
-    ])
-      .then(([wedding, gallery, registry]) => {
+    Promise.all([api.getPublicWedding(slug), api.getPublicGallery(slug)])
+      .then(([wedding, gallery]) => {
         setPage(wedding);
         setAlbums(gallery.filter((a) => a.photos.length > 0));
-        setGifts(registry.gifts);
-        setFunds(registry.cashFunds);
       })
       .catch((err) => setError(err instanceof Error ? err.message : "Page not found"))
       .finally(() => setLoading(false));
@@ -117,51 +84,6 @@ export default function PublicWeddingPage() {
       setLooking(false);
     }
   }
-
-  async function onClaim(e: React.FormEvent) {
-    e.preventDefault();
-    if (!slug || !claimGift) return;
-    setClaiming(true);
-    try {
-      const updated = await api.claimGift(slug, claimGift.id, {
-        claimerName: claimName,
-        claimerEmail: claimEmail.trim() || undefined,
-        message: claimMessage.trim() || undefined,
-      });
-      setGifts((prev) => prev.map((g) => (g.id === updated.id ? { ...g, ...updated, claims: [] } : g)));
-      setClaimGift(null);
-      setClaimName("");
-      setClaimEmail("");
-      setClaimMessage("");
-    } catch (err) {
-      setLookupMsg(err instanceof Error ? err.message : "Could not claim gift");
-    } finally {
-      setClaiming(false);
-    }
-  }
-
-  async function onContribute(e: React.FormEvent) {
-    e.preventDefault();
-    if (!slug || !contributeFund) return;
-    setContributing(true);
-    try {
-      await api.contributeCash(slug, contributeFund.id, {
-        contributorName: contribName,
-        contributorEmail: contribEmail.trim() || undefined,
-        amount: Number(contribAmount),
-        message: contribMessage.trim() || undefined,
-      });
-      const registry = await api.getPublicRegistry(slug);
-      setFunds(registry.cashFunds);
-      setContribDone(true);
-    } catch (err) {
-      setLookupMsg(err instanceof Error ? err.message : "Could not contribute");
-    } finally {
-      setContributing(false);
-    }
-  }
-
-  const hasRegistry = gifts.length > 0 || funds.length > 0;
 
   if (loading) {
     return (
@@ -225,15 +147,6 @@ export default function PublicWeddingPage() {
                 className="border-[hsl(150_20%_80%/0.45)] bg-transparent text-[hsl(150_30%_96%)] hover:bg-[hsl(150_20%_100%/0.08)]"
               >
                 <a href="#gallery">Gallery</a>
-              </Button>
-            )}
-            {hasRegistry && (
-              <Button
-                asChild
-                variant="outline"
-                className="border-[hsl(150_20%_80%/0.45)] bg-transparent text-[hsl(150_30%_96%)] hover:bg-[hsl(150_20%_100%/0.08)]"
-              >
-                <a href="#registry">Gifts</a>
               </Button>
             )}
             {page.story && (
@@ -353,130 +266,6 @@ export default function PublicWeddingPage() {
         </section>
       )}
 
-      {hasRegistry && (
-        <section id="registry" className="border-y border-[hsl(150_12%_86%)] bg-[hsl(150_14%_94%)] px-4 py-20 sm:px-8">
-          <div className="mx-auto max-w-5xl">
-            <p className="text-center text-xs font-medium tracking-[0.28em] text-[hsl(162_30%_35%)]">
-              REGISTRY
-            </p>
-            <h2 className="mt-3 text-center font-display text-3xl tracking-tight sm:text-4xl">
-              Gifts & funds
-            </h2>
-            <p className="mx-auto mt-2 max-w-lg text-center text-muted-foreground">
-              Claim a gift or contribute to a cash fund. Online payment arrives with PayHere next.
-            </p>
-
-            {funds.length > 0 && (
-              <div className="mt-12 grid gap-4 sm:grid-cols-2">
-                {funds.map((fund) => (
-                  <div key={fund.id} className="rounded-xl border bg-background p-5">
-                    {fund.imageUrl && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={mediaUrl(fund.imageUrl)}
-                        alt=""
-                        className="mb-4 h-40 w-full rounded-lg object-cover"
-                      />
-                    )}
-                    <h3 className="font-display text-2xl">{fund.title}</h3>
-                    {fund.description && (
-                      <p className="mt-1 text-sm text-muted-foreground">{fund.description}</p>
-                    )}
-                    <p className="mt-3 text-sm font-medium">
-                      {fund.currency} {Number(fund.raisedAmount).toLocaleString()} of{" "}
-                      {Number(fund.goalAmount).toLocaleString()}
-                    </p>
-                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className="h-full rounded-full bg-primary"
-                        style={{ width: `${Math.min(100, fund.progressPercent)}%` }}
-                      />
-                    </div>
-                    <Button
-                      className="mt-4 w-full"
-                      onClick={() => {
-                        setContributeFund(fund);
-                        setContribDone(false);
-                        setContribName("");
-                        setContribEmail("");
-                        setContribAmount("");
-                        setContribMessage("");
-                      }}
-                    >
-                      Contribute
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {gifts.length > 0 && (
-              <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {gifts.map((gift) => (
-                  <div key={gift.id} className="overflow-hidden rounded-xl border bg-background">
-                    {gift.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={mediaUrl(gift.imageUrl)}
-                        alt=""
-                        className="h-44 w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-44 items-center justify-center bg-muted text-muted-foreground">
-                        Gift
-                      </div>
-                    )}
-                    <div className="space-y-2 p-4">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-medium">{gift.title}</h3>
-                        {gift.fullyClaimed ? (
-                          <Badge variant="outline">Claimed</Badge>
-                        ) : (
-                          <Badge variant="secondary">
-                            {gift.remaining} left
-                          </Badge>
-                        )}
-                      </div>
-                      {gift.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-3">
-                          {gift.description}
-                        </p>
-                      )}
-                      {gift.priceAmount != null && (
-                        <p className="text-sm">
-                          {gift.currency} {Number(gift.priceAmount).toLocaleString()}
-                        </p>
-                      )}
-                      <div className="flex gap-2 pt-1">
-                        {gift.storeUrl && (
-                          <Button asChild size="sm" variant="outline">
-                            <a href={gift.storeUrl} target="_blank" rel="noreferrer">
-                              View
-                            </a>
-                          </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          disabled={gift.fullyClaimed}
-                          onClick={() => {
-                            setClaimGift(gift);
-                            setClaimName("");
-                            setClaimEmail("");
-                            setClaimMessage("");
-                          }}
-                        >
-                          {gift.fullyClaimed ? "Fully claimed" : "Claim"}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
       <section id="rsvp" className="mx-auto max-w-lg px-6 py-20 sm:px-10">
         <p className="text-xs font-medium tracking-[0.28em] text-[hsl(162_30%_35%)]">RSVP</p>
         <h2 className="mt-3 font-display text-3xl tracking-tight">Find your invitation</h2>
@@ -527,110 +316,6 @@ export default function PublicWeddingPage() {
         onClose={() => setLightboxIndex(null)}
         onIndexChange={setLightboxIndex}
       />
-
-      <Dialog open={claimGift != null} onOpenChange={(open) => !open && setClaimGift(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Claim {claimGift?.title}</DialogTitle>
-            <DialogDescription>
-              We’ll mark this gift as claimed so others know it’s taken.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={onClaim} className="space-y-3">
-            <Input
-              value={claimName}
-              onChange={(e) => setClaimName(e.target.value)}
-              placeholder="Your name"
-              required
-            />
-            <Input
-              type="email"
-              value={claimEmail}
-              onChange={(e) => setClaimEmail(e.target.value)}
-              placeholder="Email (optional)"
-            />
-            <Input
-              value={claimMessage}
-              onChange={(e) => setClaimMessage(e.target.value)}
-              placeholder="Note for the couple (optional)"
-            />
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setClaimGift(null)}>
-                Cancel
-              </Button>
-              <Button type="submit" loading={claiming}>
-                {claiming ? "Claiming…" : "Claim gift"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={contributeFund != null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setContributeFund(null);
-            setContribDone(false);
-          }
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {contribDone ? "Thank you" : `Contribute to ${contributeFund?.title}`}
-            </DialogTitle>
-            <DialogDescription>
-              {contribDone
-                ? "Your pledge is recorded. The couple will confirm it (PayHere payments come next)."
-                : "Enter an amount to pledge. Online payment will be added with PayHere."}
-            </DialogDescription>
-          </DialogHeader>
-          {contribDone ? (
-            <DialogFooter>
-              <Button type="button" onClick={() => setContributeFund(null)}>
-                Done
-              </Button>
-            </DialogFooter>
-          ) : (
-            <form onSubmit={onContribute} className="space-y-3">
-              <Input
-                value={contribName}
-                onChange={(e) => setContribName(e.target.value)}
-                placeholder="Your name"
-                required
-              />
-              <Input
-                type="email"
-                value={contribEmail}
-                onChange={(e) => setContribEmail(e.target.value)}
-                placeholder="Email (optional)"
-              />
-              <Input
-                type="number"
-                min={1}
-                value={contribAmount}
-                onChange={(e) => setContribAmount(e.target.value)}
-                placeholder={`Amount (${contributeFund?.currency ?? "LKR"})`}
-                required
-              />
-              <Input
-                value={contribMessage}
-                onChange={(e) => setContribMessage(e.target.value)}
-                placeholder="Message (optional)"
-              />
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setContributeFund(null)}>
-                  Cancel
-                </Button>
-                <Button type="submit" loading={contributing}>
-                  {contributing ? "Saving…" : "Submit pledge"}
-                </Button>
-              </DialogFooter>
-            </form>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

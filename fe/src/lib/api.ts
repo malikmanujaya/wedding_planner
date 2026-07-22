@@ -79,57 +79,6 @@ export type GalleryAlbum = {
   photos: GalleryPhoto[];
 };
 
-export type GiftClaim = {
-  id: number;
-  claimerName: string;
-  claimerEmail: string | null;
-  message: string | null;
-  createdAt: string;
-};
-
-export type GiftItem = {
-  id: number;
-  title: string;
-  description: string | null;
-  imageUrl: string | null;
-  storeUrl: string | null;
-  priceAmount: number | null;
-  currency: string;
-  quantityDesired: number;
-  quantityClaimed: number;
-  remaining: number;
-  fullyClaimed: boolean;
-  sortOrder: number;
-  publicVisible: boolean;
-  claims: GiftClaim[];
-};
-
-export type CashFund = {
-  id: number;
-  title: string;
-  description: string | null;
-  goalAmount: number;
-  raisedAmount: number;
-  pendingAmount: number;
-  currency: string;
-  imageUrl: string | null;
-  sortOrder: number;
-  publicVisible: boolean;
-  progressPercent: number;
-};
-
-export type CashContribution = {
-  id: number;
-  fundId: number;
-  fundTitle: string;
-  contributorName: string;
-  contributorEmail: string | null;
-  amount: number;
-  message: string | null;
-  status: "PENDING" | "CONFIRMED" | "CANCELLED";
-  createdAt: string;
-};
-
 export type ThankYouCard = {
   id: number;
   templateKey: string;
@@ -150,17 +99,6 @@ export type PublicThankYou = {
   coupleNames: string | null;
   weddingTitle: string;
   weddingDate: string | null;
-};
-
-export type PublicRegistry = {
-  gifts: GiftItem[];
-  cashFunds: CashFund[];
-};
-
-export type HostRegistry = {
-  gifts: GiftItem[];
-  cashFunds: CashFund[];
-  contributions: CashContribution[];
 };
 
 export type WeddingMember = {
@@ -709,132 +647,6 @@ export const api = {
   },
   getPublicThankYou(token: string) {
     return request<PublicThankYou>(`/api/public/invites/${token}/thank-you`);
-  },
-  getPublicRegistry(slug: string) {
-    return request<PublicRegistry>(`/api/public/weddings/${slug}/registry`);
-  },
-  claimGift(
-    slug: string,
-    giftId: number,
-    payload: { claimerName: string; claimerEmail?: string; message?: string }
-  ) {
-    return request<GiftItem>(`/api/public/weddings/${slug}/registry/gifts/${giftId}/claim`, {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  },
-  contributeCash(
-    slug: string,
-    fundId: number,
-    payload: {
-      contributorName: string;
-      contributorEmail?: string;
-      amount: number;
-      message?: string;
-    }
-  ) {
-    return request<CashContribution>(
-      `/api/public/weddings/${slug}/registry/funds/${fundId}/contribute`,
-      {
-        method: "POST",
-        body: JSON.stringify(payload),
-      }
-    );
-  },
-  getHostRegistry(weddingId: number) {
-    return request<HostRegistry>(`/api/weddings/${weddingId}/registry`);
-  },
-  createGiftItem(
-    weddingId: number,
-    payload: {
-      title: string;
-      description?: string;
-      imageUrl?: string;
-      storeUrl?: string;
-      priceAmount?: number;
-      currency?: string;
-      quantityDesired?: number;
-      publicVisible?: boolean;
-    }
-  ) {
-    return request<GiftItem>(`/api/weddings/${weddingId}/registry/gifts`, {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  },
-  updateGiftItem(
-    weddingId: number,
-    giftId: number,
-    payload: {
-      title: string;
-      description?: string;
-      imageUrl?: string;
-      storeUrl?: string;
-      priceAmount?: number;
-      currency?: string;
-      quantityDesired?: number;
-      publicVisible?: boolean;
-      sortOrder?: number;
-    }
-  ) {
-    return request<GiftItem>(`/api/weddings/${weddingId}/registry/gifts/${giftId}`, {
-      method: "PUT",
-      body: JSON.stringify(payload),
-    });
-  },
-  deleteGiftItem(weddingId: number, giftId: number) {
-    return request<void>(`/api/weddings/${weddingId}/registry/gifts/${giftId}`, {
-      method: "DELETE",
-    });
-  },
-  createCashFund(
-    weddingId: number,
-    payload: {
-      title: string;
-      description?: string;
-      goalAmount: number;
-      currency?: string;
-      imageUrl?: string;
-      publicVisible?: boolean;
-    }
-  ) {
-    return request<CashFund>(`/api/weddings/${weddingId}/registry/funds`, {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  },
-  updateCashFund(
-    weddingId: number,
-    fundId: number,
-    payload: {
-      title: string;
-      description?: string;
-      goalAmount: number;
-      currency?: string;
-      imageUrl?: string;
-      publicVisible?: boolean;
-      sortOrder?: number;
-    }
-  ) {
-    return request<CashFund>(`/api/weddings/${weddingId}/registry/funds/${fundId}`, {
-      method: "PUT",
-      body: JSON.stringify(payload),
-    });
-  },
-  deleteCashFund(weddingId: number, fundId: number) {
-    return request<void>(`/api/weddings/${weddingId}/registry/funds/${fundId}`, {
-      method: "DELETE",
-    });
-  },
-  updateContributionStatus(
-    weddingId: number,
-    contributionId: number,
-    status: CashContribution["status"]
-  ) {
-    return request<CashContribution>(
-      `/api/weddings/${weddingId}/registry/contributions/${contributionId}/status?status=${status}`,
-      { method: "POST" }
-    );
   },
   listMembers(weddingId: number) {
     return request<WeddingMember[]>(`/api/weddings/${weddingId}/members`);
