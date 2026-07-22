@@ -649,7 +649,7 @@ export default function GuestsPage() {
                 <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={form.formState.isSubmitting}>
+                <Button type="submit" loading={form.formState.isSubmitting}>
                   {form.formState.isSubmitting
                     ? "Saving…"
                     : editing

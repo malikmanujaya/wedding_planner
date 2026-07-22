@@ -242,8 +242,8 @@ export default function GalleryPage() {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Short description (optional)"
             />
-            <Button type="submit" className="sm:col-span-2" disabled={creating}>
-              <Plus className="h-4 w-4" />
+            <Button type="submit" className="sm:col-span-2" loading={creating}>
+              {!creating && <Plus className="h-4 w-4" />}
               {creating ? "Creating…" : "Create album"}
             </Button>
           </form>

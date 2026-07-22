@@ -139,7 +139,7 @@ export default function WeddingsPage() {
               <Button
                 type="submit"
                 className="sm:col-span-2"
-                disabled={form.formState.isSubmitting}
+                loading={form.formState.isSubmitting}
               >
                 {form.formState.isSubmitting ? "Creating…" : "Create wedding"}
               </Button>

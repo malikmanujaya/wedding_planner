@@ -192,8 +192,8 @@ export default function PublicPageEditor() {
 
             {error && <p className="text-sm text-destructive">{error}</p>}
 
-            <Button type="submit" disabled={saving}>
-              <Save className="h-4 w-4" />
+            <Button type="submit" loading={saving}>
+              {!saving && <Save className="h-4 w-4" />}
               {saving ? "Saving…" : "Save public page"}
             </Button>
           </form>

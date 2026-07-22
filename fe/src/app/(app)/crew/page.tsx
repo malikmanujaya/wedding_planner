@@ -392,7 +392,7 @@ export default function CrewPage() {
                 <Button type="button" variant="outline" onClick={() => setInviteOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={inviteForm.formState.isSubmitting}>
+                <Button type="submit" loading={inviteForm.formState.isSubmitting}>
                   {inviteForm.formState.isSubmitting ? "Inviting…" : "Invite"}
                 </Button>
               </DialogFooter>
@@ -445,7 +445,7 @@ export default function CrewPage() {
                 <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={editForm.formState.isSubmitting}>
+                <Button type="submit" loading={editForm.formState.isSubmitting}>
                   {editForm.formState.isSubmitting ? "Saving…" : "Save"}
                 </Button>
               </DialogFooter>

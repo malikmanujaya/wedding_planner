@@ -304,8 +304,8 @@ export default function SeatingPage() {
             <Download className="h-4 w-4" />
             Export PNG
           </Button>
-          <Button onClick={onSave} disabled={saving}>
-            <Save className="h-4 w-4" />
+          <Button onClick={onSave} loading={saving}>
+            {!saving && <Save className="h-4 w-4" />}
             {saving ? "Saving…" : "Save"}
           </Button>
         </div>

@@ -505,7 +505,7 @@ export default function PublicWeddingPage() {
             />
           </div>
           {lookupMsg && <p className="text-sm text-destructive">{lookupMsg}</p>}
-          <Button type="submit" className="w-full" disabled={looking}>
+          <Button type="submit" className="w-full" loading={looking}>
             {looking ? "Looking…" : "Continue to RSVP"}
           </Button>
         </form>
@@ -558,7 +558,7 @@ export default function PublicWeddingPage() {
               <Button type="button" variant="outline" onClick={() => setClaimGift(null)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={claiming}>
+              <Button type="submit" loading={claiming}>
                 {claiming ? "Claiming…" : "Claim gift"}
               </Button>
             </DialogFooter>
@@ -623,7 +623,7 @@ export default function PublicWeddingPage() {
                 <Button type="button" variant="outline" onClick={() => setContributeFund(null)}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={contributing}>
+                <Button type="submit" loading={contributing}>
                   {contributing ? "Saving…" : "Submit pledge"}
                 </Button>
               </DialogFooter>

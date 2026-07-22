@@ -187,8 +187,8 @@ export default function ThankYouPage() {
               hint="Shown at the top of the personal message card."
             />
 
-            <Button onClick={save} disabled={saving} className="w-full">
-              <Save className="h-4 w-4" />
+            <Button onClick={save} loading={saving} className="w-full">
+              {!saving && <Save className="h-4 w-4" />}
               {saving ? "Saving…" : hasCard ? "Update card" : "Publish card"}
             </Button>
           </CardContent>

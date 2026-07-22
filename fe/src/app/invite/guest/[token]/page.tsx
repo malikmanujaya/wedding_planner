@@ -206,7 +206,7 @@ export default function GuestInvitePage() {
               {saved && (
                 <p className="text-sm text-[hsl(162_35%_30%)]">RSVP saved — thank you!</p>
               )}
-              <Button type="submit" className="w-full" disabled={saving}>
+              <Button type="submit" className="w-full" loading={saving}>
                 {saving ? "Saving…" : "Send RSVP"}
               </Button>
             </form>

@@ -95,7 +95,7 @@ export default function RegisterPage() {
             )}
           />
           {serverError && <p className="text-sm text-destructive">{serverError}</p>}
-          <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+          <Button type="submit" className="w-full" loading={form.formState.isSubmitting}>
             {form.formState.isSubmitting ? t.auth.creating : t.auth.createBtn}
           </Button>
         </form>

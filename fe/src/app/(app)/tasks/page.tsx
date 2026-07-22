@@ -390,7 +390,7 @@ export default function TasksPage() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={form.formState.isSubmitting}>
+                <Button type="submit" loading={form.formState.isSubmitting}>
                   {form.formState.isSubmitting
                     ? "Saving…"
                     : editing
