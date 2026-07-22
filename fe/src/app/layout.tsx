@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Source_Sans_3 } from "next/font/google";
+import { theme } from "@/theme";
+import { LocaleProvider } from "@/i18n";
 import "./globals.css";
 
 const display = Fraunces({
@@ -15,9 +17,8 @@ const body = Source_Sans_3({
 });
 
 export const metadata: Metadata = {
-  title: "Aisle — Wedding Planner",
-  description:
-    "Plan checklists, guests, seating, invitations, and vendors in one place.",
+  title: `${theme.brand.name} — ${theme.brand.productLine}`,
+  description: theme.copy.authPanel,
 };
 
 export default function RootLayout({
@@ -28,7 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${display.variable} ${body.variable} font-sans antialiased`}>
-        {children}
+        <LocaleProvider>{children}</LocaleProvider>
       </body>
     </html>
   );

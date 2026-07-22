@@ -1,39 +1,10 @@
+@import "../theme/theme.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  :root {
-    /* Deep botanical green — not purple, not cream/terracotta */
-    --background: 150 18% 97%;
-    --foreground: 160 22% 12%;
-    --card: 0 0% 100%;
-    --card-foreground: 160 22% 12%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 160 22% 12%;
-    --primary: 162 42% 28%;
-    --primary-foreground: 150 30% 98%;
-    --secondary: 150 14% 93%;
-    --secondary-foreground: 160 18% 20%;
-    --muted: 150 12% 93%;
-    --muted-foreground: 160 8% 42%;
-    --accent: 162 28% 90%;
-    --accent-foreground: 162 42% 22%;
-    --destructive: 4 62% 42%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 150 12% 86%;
-    --input: 150 12% 86%;
-    --ring: 162 42% 28%;
-    --radius: 0.65rem;
-    --sidebar: 160 20% 10%;
-    --sidebar-foreground: 150 18% 92%;
-    --sidebar-border: 160 14% 18%;
-    --sidebar-accent: 162 28% 18%;
-    --sidebar-accent-foreground: 150 30% 96%;
-    --font-display: "Fraunces", Georgia, serif;
-    --font-body: "Source Sans 3", system-ui, sans-serif;
-  }
-
   * {
     @apply border-border;
   }
@@ -41,15 +12,78 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
   }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.18);
+    color: hsl(var(--foreground));
+  }
 }
 
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  .animate-fade-up {
+    animation: fadeUp 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.7s ease-out both;
+  }
+
+  .animate-soft-pulse {
+    animation: softPulse 6s ease-in-out infinite;
+  }
+
+  .animate-ken-burns {
+    animation: kenBurns 18s ease-out forwards;
+  }
+
+  .animate-marquee {
+    animation: marquee 38s linear infinite;
+  }
+
+  .animate-sparkle-fall {
+    animation-name: sparkleFall;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    will-change: transform, opacity;
+  }
+
+  .animate-twinkle {
+    animation: twinkle 3.5s ease-in-out infinite;
+  }
+
+  .animate-float {
+    animation: floatY 6s ease-in-out infinite;
+  }
+
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-fade-in,
+  .animate-soft-pulse,
+  .animate-ken-burns,
+  .animate-marquee,
+  .animate-sparkle-fall,
+  .animate-twinkle,
+  .animate-float {
+    animation: none !important;
+  }
+
+  .animate-fade-up,
+  .animate-fade-in {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Hide purely decorative falling sparkles entirely. */
+  .animate-sparkle-fall {
+    display: none !important;
   }
 }

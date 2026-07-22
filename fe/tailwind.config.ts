@@ -54,30 +54,18 @@ const config: Config = {
           accent: "hsl(var(--sidebar-accent))",
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
         },
+        ink: "hsl(var(--ink))",
+        mist: "hsl(var(--mist))",
+        moss: "hsl(var(--moss))",
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
-      keyframes: {
-        "fade-up": {
-          from: { opacity: "0", transform: "translateY(16px)" },
-          to: { opacity: "1", transform: "translateY(0)" },
-        },
-        "fade-in": {
-          from: { opacity: "0" },
-          to: { opacity: "1" },
-        },
-        "soft-pulse": {
-          "0%, 100%": { opacity: "0.55" },
-          "50%": { opacity: "0.85" },
-        },
-      },
-      animation: {
-        "fade-up": "fade-up 0.7s ease-out both",
-        "fade-in": "fade-in 0.6s ease-out both",
-        "soft-pulse": "soft-pulse 5s ease-in-out infinite",
+      boxShadow: {
+        soft: "var(--shadow-soft)",
+        lift: "var(--shadow-lift)",
       },
     },
   },

@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { api, getStoredUser, startAuthSession } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { theme } from "@/theme";
 import { Toaster } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -83,12 +84,16 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2 px-5 py-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[hsl(162_42%_35%)] text-sm font-semibold text-white">
-          A
+        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-sm font-semibold text-primary-foreground">
+          {theme.brand.mark}
         </div>
         <div>
-          <p className="font-display text-lg leading-none text-sidebar-foreground">Aisle</p>
-          <p className="text-[11px] text-sidebar-foreground/55">Wedding planner</p>
+          <p className="font-display text-lg leading-none text-sidebar-foreground">
+            {theme.brand.name}
+          </p>
+          <p className="text-[11px] text-sidebar-foreground/55">
+            {theme.brand.productLine}
+          </p>
         </div>
       </div>
       <Separator className="bg-sidebar-border" />
@@ -166,7 +171,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <SidebarBody onNavigate={() => setMobileOpen(false)} />
               </SheetContent>
             </Sheet>
-            <p className="text-sm text-muted-foreground md:hidden">Aisle</p>
+            <p className="text-sm text-muted-foreground md:hidden">{theme.brand.name}</p>
           </div>
 
           <DropdownMenu>

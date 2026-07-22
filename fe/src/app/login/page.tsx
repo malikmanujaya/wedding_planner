@@ -17,10 +17,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { AuthLayout } from "@/components/AuthLayout";
+import { useI18n } from "@/i18n";
 import { useState } from "react";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [serverError, setServerError] = useState<string | null>(null);
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -34,19 +36,19 @@ export default function LoginPage() {
       saveAuth(auth);
       router.replace("/dashboard");
     } catch (err) {
-      setServerError(err instanceof Error ? err.message : "Login failed");
+      setServerError(err instanceof Error ? err.message : t.auth.loginFailed);
     }
   }
 
   return (
     <AuthLayout
-      title="Welcome back"
-      subtitle="Sign in to manage your weddings."
+      title={t.auth.loginTitle}
+      subtitle={t.auth.loginSubtitle}
       footer={
         <>
-          No account?{" "}
+          {t.auth.noAccount}{" "}
           <Link href="/register" className="font-medium text-primary underline-offset-4 hover:underline">
-            Create one
+            {t.auth.createOne}
           </Link>
         </>
       }
@@ -58,7 +60,7 @@ export default function LoginPage() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>{t.auth.email}</FormLabel>
                 <FormControl>
                   <Input type="email" autoComplete="email" {...field} />
                 </FormControl>
@@ -71,7 +73,7 @@ export default function LoginPage() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <FormLabel>{t.auth.password}</FormLabel>
                 <FormControl>
                   <Input type="password" autoComplete="current-password" {...field} />
                 </FormControl>
@@ -81,7 +83,7 @@ export default function LoginPage() {
           />
           {serverError && <p className="text-sm text-destructive">{serverError}</p>}
           <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? "Signing in…" : "Sign in"}
+            {form.formState.isSubmitting ? t.auth.signingIn : t.auth.signInBtn}
           </Button>
         </form>
       </Form>

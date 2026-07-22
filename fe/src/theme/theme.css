@@ -1,0 +1,140 @@
+/**
+ * Aisle CSS theme tokens.
+ * Keep values aligned with `src/theme/theme.ts` → `colors` / `fonts` / `radius`.
+ */
+
+:root {
+  --background: 150 18% 97%;
+  --foreground: 160 22% 12%;
+  --card: 0 0% 100%;
+  --card-foreground: 160 22% 12%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 160 22% 12%;
+  --primary: 162 42% 28%;
+  --primary-foreground: 150 30% 98%;
+  --secondary: 150 14% 93%;
+  --secondary-foreground: 160 18% 20%;
+  --muted: 150 12% 93%;
+  --muted-foreground: 160 8% 42%;
+  --accent: 162 28% 90%;
+  --accent-foreground: 162 42% 22%;
+  --destructive: 4 62% 42%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 150 12% 86%;
+  --input: 150 12% 86%;
+  --ring: 162 42% 28%;
+  --radius: 0.65rem;
+
+  --sidebar: 160 20% 10%;
+  --sidebar-foreground: 150 18% 92%;
+  --sidebar-border: 160 14% 18%;
+  --sidebar-accent: 162 28% 18%;
+  --sidebar-accent-foreground: 150 30% 96%;
+
+  --ink: 160 22% 8%;
+  --mist: 150 22% 94%;
+  --moss: 162 35% 22%;
+
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Source Sans 3", system-ui, sans-serif;
+
+  --shadow-soft: 0 18px 50px -28px hsl(160 22% 8% / 0.35);
+  --shadow-lift: 0 10px 30px -18px hsl(160 22% 8% / 0.22);
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes softPulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@keyframes kenBurns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.06);
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes sparkleFall {
+  0% {
+    transform: translateY(-10%) translateX(0) rotate(0deg) scale(0.6);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) translateX(var(--drift, 0px)) rotate(220deg)
+      scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes floatY {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
