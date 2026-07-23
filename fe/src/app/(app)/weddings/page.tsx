@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { api, setActiveWeddingId, type Wedding } from "@/lib/api";
+import { api, getActiveWeddingId, setActiveWedding, type Wedding } from "@/lib/api";
 import { createWeddingSchema, type CreateWeddingValues } from "@/lib/schemas";
 import { toast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +45,10 @@ export default function WeddingsPage() {
   async function load() {
     const list = await api.listWeddings();
     setWeddings(list);
+    const activeId = getActiveWeddingId();
+    const active = activeId ? list.find((w) => w.id === activeId) : null;
+    if (active) setActiveWedding(active);
+    else if (list[0] && !activeId) setActiveWedding(list[0]);
   }
 
   useEffect(() => {
@@ -63,7 +67,7 @@ export default function WeddingsPage() {
         venue: values.venue || undefined,
         weddingDate: values.weddingDate || undefined,
       });
-      setActiveWeddingId(created.id);
+      setActiveWedding(created);
       form.reset({ title: "", weddingDate: "", venue: "" });
       await load();
       toast.success("Wedding created");
@@ -186,7 +190,7 @@ export default function WeddingsPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => {
-                          setActiveWeddingId(w.id);
+                          setActiveWedding(w);
                           toast.success(`Active wedding: ${w.title}`);
                         }}
                       >

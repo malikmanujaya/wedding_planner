@@ -6,7 +6,7 @@ import {
   api,
   getActiveWeddingId,
   getStoredUser,
-  setActiveWeddingId,
+  setActiveWedding,
   type Wedding,
 } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +32,10 @@ export default function DashboardPage() {
       .then((list) => {
         setWeddings(list);
         if (list.length && !getActiveWeddingId()) {
-          setActiveWeddingId(list[0].id);
+          setActiveWedding(list[0]);
+        } else {
+          const active = list.find((w) => w.id === getActiveWeddingId());
+          if (active) setActiveWedding(active);
         }
       })
       .catch((err) => setError(err instanceof Error ? err.message : "Failed to load"));

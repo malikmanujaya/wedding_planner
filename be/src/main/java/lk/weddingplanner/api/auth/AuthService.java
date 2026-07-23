@@ -4,17 +4,21 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HexFormat;
+import java.util.Set;
 import lk.weddingplanner.api.auth.dto.AuthResponse;
 import lk.weddingplanner.api.auth.dto.LoginRequest;
 import lk.weddingplanner.api.auth.dto.MeResponse;
 import lk.weddingplanner.api.auth.dto.RefreshRequest;
 import lk.weddingplanner.api.auth.dto.RegisterRequest;
 import lk.weddingplanner.api.common.ApiException;
-import lk.weddingplanner.api.domain.GlobalRole;
 import lk.weddingplanner.api.domain.RefreshToken;
+import lk.weddingplanner.api.domain.Role;
+import lk.weddingplanner.api.domain.SystemRoles;
 import lk.weddingplanner.api.domain.User;
 import lk.weddingplanner.api.repository.RefreshTokenRepository;
+import lk.weddingplanner.api.repository.RoleRepository;
 import lk.weddingplanner.api.repository.UserRepository;
 import lk.weddingplanner.api.security.JwtService;
 import lk.weddingplanner.api.security.UserPrincipal;
@@ -32,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -47,11 +52,20 @@ public class AuthService {
             throw new ApiException("Email already registered", HttpStatus.CONFLICT);
         }
 
+        Role userRole =
+                roleRepository
+                        .findByCodeIgnoreCase(SystemRoles.USER)
+                        .orElseThrow(
+                                () ->
+                                        new ApiException(
+                                                "Default USER role is missing. Restart the API to seed roles.",
+                                                HttpStatus.INTERNAL_SERVER_ERROR));
+
         User user = new User();
         user.setEmail(request.email().trim().toLowerCase());
         user.setFullName(request.fullName().trim());
         user.setPasswordHash(passwordEncoder.encode(request.password()));
-        user.setGlobalRole(GlobalRole.USER);
+        user.setRoles(Set.of(userRole));
         userRepository.save(user);
 
         return issueTokens(new UserPrincipal(user));
@@ -65,9 +79,13 @@ public class AuthService {
 
         User user =
                 userRepository
-                        .findByEmailIgnoreCase(request.email().trim())
+                        .findByEmailIgnoreCaseWithRoles(request.email().trim())
                         .orElseThrow(
                                 () -> new ApiException("Invalid credentials", HttpStatus.UNAUTHORIZED));
+
+        if (!user.isActive()) {
+            throw new ApiException("Account is disabled", HttpStatus.FORBIDDEN);
+        }
 
         return issueTokens(new UserPrincipal(user));
     }
@@ -86,7 +104,14 @@ public class AuthService {
             throw new ApiException("Refresh token expired", HttpStatus.UNAUTHORIZED);
         }
 
-        User user = stored.getUser();
+        User user =
+                userRepository
+                        .findByIdWithRoles(stored.getUser().getId())
+                        .orElseThrow(() -> new ApiException("User not found", HttpStatus.UNAUTHORIZED));
+        if (!user.isActive()) {
+            refreshTokenRepository.delete(stored);
+            throw new ApiException("Account is disabled", HttpStatus.FORBIDDEN);
+        }
         refreshTokenRepository.delete(stored);
         return issueTokens(new UserPrincipal(user));
     }
@@ -105,7 +130,8 @@ public class AuthService {
                 principal.getId(),
                 principal.getEmail(),
                 principal.getFullName(),
-                principal.getAuthorities().iterator().next().getAuthority().replace("ROLE_", ""));
+                new ArrayList<>(principal.getRoleCodes()),
+                principal.isActive());
     }
 
     private AuthResponse issueTokens(UserPrincipal principal) {
@@ -117,7 +143,8 @@ public class AuthService {
                 jwtService.getAccessExpirationMs() / 1000,
                 principal.getId(),
                 principal.getEmail(),
-                principal.getFullName());
+                principal.getFullName(),
+                new ArrayList<>(principal.getRoleCodes()));
     }
 
     private String createRefreshToken(Long userId) {

@@ -5,7 +5,9 @@ import { useCallback, useEffect, useState } from "react";
 import { CheckCircle2, ScanLine, Search, XCircle } from "lucide-react";
 import {
   api,
+  getActiveWedding,
   getActiveWeddingId,
+  setActiveWedding,
   type CheckInGuest,
   type Wedding,
 } from "@/lib/api";
@@ -42,9 +44,15 @@ export default function CheckInPage() {
   }, []);
 
   const loadWedding = useCallback(async (id: number) => {
-    const weddings = await api.listWeddings();
-    const active = weddings.find((w) => w.id === id) ?? null;
-    setWedding(active);
+    const cached = getActiveWedding();
+    if (cached?.id === id) {
+      setWedding(cached);
+    } else {
+      const weddings = await api.listWeddings();
+      const active = weddings.find((w) => w.id === id) ?? null;
+      if (active) setActiveWedding(active);
+      setWedding(active);
+    }
     await refreshStats(id);
   }, [refreshStats]);
 

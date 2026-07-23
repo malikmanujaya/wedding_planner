@@ -7,9 +7,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2, Pencil, Plus, Store, Trash2, Undo2 } from "lucide-react";
 import {
   api,
+  getActiveWedding,
   getActiveWeddingId,
   type VendorPayment,
-  type Wedding,
   type WeddingVendor,
 } from "@/lib/api";
 import { vendorSchema, type VendorFormValues } from "@/lib/schemas";
@@ -171,25 +171,19 @@ export default function VendorsPage() {
     defaultValues: emptyForm(),
   });
 
-  const load = useCallback(
-    async (id: number, query = q, cat = category) => {
-      const [list, weddings] = await Promise.all([
-        api.listVendors(id, {
-          q: query || undefined,
-          category: cat || undefined,
-        }),
-        api.listWeddings(),
-      ]);
-      setVendors(list);
-      const active = weddings.find((w: Wedding) => w.id === id);
-      setWeddingTitle(active?.title ?? `Wedding #${id}`);
-      setPaymentsVendor((prev) => {
-        if (!prev) return prev;
-        return list.find((v) => v.id === prev.id) ?? prev;
-      });
-    },
-    [q, category]
-  );
+  const load = useCallback(async (id: number, query = "", cat = "") => {
+    const list = await api.listVendors(id, {
+      q: query || undefined,
+      category: cat || undefined,
+    });
+    setVendors(list);
+    const active = getActiveWedding();
+    setWeddingTitle(active?.id === id ? active.title : `Wedding #${id}`);
+    setPaymentsVendor((prev) => {
+      if (!prev) return prev;
+      return list.find((v) => v.id === prev.id) ?? prev;
+    });
+  }, []);
 
   useEffect(() => {
     const id = getActiveWeddingId();

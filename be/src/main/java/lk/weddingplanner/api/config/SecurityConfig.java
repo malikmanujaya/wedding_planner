@@ -58,6 +58,8 @@ public class SecurityConfig {
                                         .permitAll()
                                         .requestMatchers(HttpMethod.OPTIONS, "/**")
                                         .permitAll()
+                                        .requestMatchers("/api/admin/**")
+                                        .hasAnyRole("SUPER_ADMIN", "ADMIN")
                                         .anyRequest()
                                         .authenticated())
                 .exceptionHandling(

@@ -7,7 +7,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Copy, Pencil, Plus, Trash2, UsersRound } from "lucide-react";
 import {
   api,
+  getActiveWedding,
   getActiveWeddingId,
+  setActiveWedding,
   type Wedding,
   type WeddingMember,
 } from "@/lib/api";
@@ -81,12 +83,17 @@ export default function CrewPage() {
   });
 
   const load = useCallback(async (id: number) => {
-    const [crewList, weddings] = await Promise.all([
-      api.listCrew(id),
-      api.listWeddings(),
-    ]);
+    const cached = getActiveWedding();
+    const crewList = await api.listCrew(id);
     setCrew(crewList);
-    setWedding(weddings.find((w) => w.id === id) ?? null);
+    if (cached?.id === id) {
+      setWedding(cached);
+      return;
+    }
+    const weddings = await api.listWeddings();
+    const active = weddings.find((w) => w.id === id) ?? null;
+    if (active) setActiveWedding(active);
+    setWedding(active);
   }, []);
 
   useEffect(() => {

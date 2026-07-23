@@ -23,6 +23,8 @@ export const appNavLabels: Record<string, string> = {
   "/gallery": "Gallery",
   "/thank-you": "Thank-you card",
   "/public-page": "Public page",
+  "/admin/users": "Users",
+  "/admin/roles": "Roles",
 };
 
 function labelForPath(pathname: string) {

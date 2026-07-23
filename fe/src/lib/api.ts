@@ -209,9 +209,28 @@ export type AuthUser = {
   userId: number;
   email: string;
   fullName: string;
+  roles: string[];
   token: string;
   refreshToken: string;
   expiresIn: number;
+};
+
+export type PlatformRole = {
+  id: number;
+  code: string;
+  name: string;
+  description: string | null;
+  systemRole: boolean;
+  active: boolean;
+};
+
+export type AdminUser = {
+  id: number;
+  email: string;
+  fullName: string;
+  active: boolean;
+  roles: PlatformRole[];
+  createdAt: string;
 };
 
 type ApiError = {
@@ -282,6 +301,7 @@ export function saveAuth(auth: AuthUser) {
       userId: auth.userId,
       email: auth.email,
       fullName: auth.fullName,
+      roles: auth.roles ?? [],
     })
   );
   scheduleProactiveRefresh();
@@ -297,6 +317,7 @@ export function clearAuth() {
   localStorage.removeItem("wp_token_expires_at");
   localStorage.removeItem("wp_user");
   localStorage.removeItem("wp_active_wedding");
+  localStorage.removeItem("wp_active_wedding_meta");
 }
 
 export function getStoredUser(): Omit<AuthUser, "token" | "refreshToken" | "expiresIn"> | null {
@@ -310,14 +331,40 @@ export function getStoredUser(): Omit<AuthUser, "token" | "refreshToken" | "expi
   }
 }
 
+const ACTIVE_WEDDING_META_KEY = "wp_active_wedding_meta";
+
+export function setActiveWedding(wedding: Wedding) {
+  localStorage.setItem("wp_active_wedding", String(wedding.id));
+  localStorage.setItem(ACTIVE_WEDDING_META_KEY, JSON.stringify(wedding));
+}
+
+/** Prefer setActiveWedding when the full wedding is available. */
 export function setActiveWeddingId(id: number) {
+  const prev = localStorage.getItem("wp_active_wedding");
   localStorage.setItem("wp_active_wedding", String(id));
+  if (prev !== String(id)) {
+    localStorage.removeItem(ACTIVE_WEDDING_META_KEY);
+  }
 }
 
 export function getActiveWeddingId(): number | null {
   if (typeof window === "undefined") return null;
   const raw = localStorage.getItem("wp_active_wedding");
   return raw ? Number(raw) : null;
+}
+
+export function getActiveWedding(): Wedding | null {
+  if (typeof window === "undefined") return null;
+  const id = getActiveWeddingId();
+  if (!id) return null;
+  const raw = localStorage.getItem(ACTIVE_WEDDING_META_KEY);
+  if (!raw) return null;
+  try {
+    const wedding = JSON.parse(raw) as Wedding;
+    return wedding.id === id ? wedding : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Call once after login / on app mount to keep access token fresh. */
@@ -376,7 +423,29 @@ function isAuthPath(path: string) {
   );
 }
 
+const inflightGets = new Map<string, Promise<unknown>>();
+
 async function request<T>(path: string, init: RequestInit = {}, retried = false): Promise<T> {
+  const method = (init.method ?? "GET").toUpperCase();
+  const dedupeKey =
+    !retried && method === "GET" && !init.body ? `${method} ${path}` : null;
+
+  if (dedupeKey) {
+    const existing = inflightGets.get(dedupeKey);
+    if (existing) return existing as Promise<T>;
+  }
+
+  const run = doRequest<T>(path, init, retried);
+  if (dedupeKey) {
+    inflightGets.set(dedupeKey, run);
+    run.finally(() => {
+      if (inflightGets.get(dedupeKey) === run) inflightGets.delete(dedupeKey);
+    });
+  }
+  return run;
+}
+
+async function doRequest<T>(path: string, init: RequestInit = {}, retried = false): Promise<T> {
   const headers = new Headers(init.headers);
   if (!headers.has("Content-Type") && init.body) {
     headers.set("Content-Type", "application/json");
@@ -394,7 +463,7 @@ async function request<T>(path: string, init: RequestInit = {}, retried = false)
         retryHeaders.set("Content-Type", "application/json");
       }
       retryHeaders.set("Authorization", `Bearer ${newToken}`);
-      return request<T>(path, { ...init, headers: retryHeaders }, true);
+      return doRequest<T>(path, { ...init, headers: retryHeaders }, true);
     } catch {
       if (typeof window !== "undefined") {
         window.location.href = "/login";
@@ -444,9 +513,74 @@ export const api = {
     }
   },
   me() {
-    return request<{ id: number; email: string; fullName: string; globalRole: string }>(
-      "/api/auth/me"
-    );
+    return request<{
+      id: number;
+      email: string;
+      fullName: string;
+      roles: string[];
+      active: boolean;
+    }>("/api/auth/me");
+  },
+  listAdminUsers() {
+    return request<AdminUser[]>("/api/admin/users");
+  },
+  createAdminUser(payload: {
+    email: string;
+    fullName: string;
+    password: string;
+    roleCodes: string[];
+    active?: boolean;
+  }) {
+    return request<AdminUser>("/api/admin/users", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  updateAdminUser(
+    id: number,
+    payload: {
+      fullName: string;
+      password?: string;
+      roleCodes: string[];
+      active?: boolean;
+    }
+  ) {
+    return request<AdminUser>(`/api/admin/users/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  },
+  deleteAdminUser(id: number) {
+    return request<void>(`/api/admin/users/${id}`, { method: "DELETE" });
+  },
+  listAdminRoles() {
+    return request<PlatformRole[]>("/api/admin/roles");
+  },
+  createAdminRole(payload: {
+    name: string;
+    description?: string;
+    active?: boolean;
+  }) {
+    return request<PlatformRole>("/api/admin/roles", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  updateAdminRole(
+    id: number,
+    payload: {
+      name: string;
+      description?: string;
+      active?: boolean;
+    }
+  ) {
+    return request<PlatformRole>(`/api/admin/roles/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  },
+  deleteAdminRole(id: number) {
+    return request<void>(`/api/admin/roles/${id}`, { method: "DELETE" });
   },
   listWeddings() {
     return request<Wedding[]>("/api/weddings");

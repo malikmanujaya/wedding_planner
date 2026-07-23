@@ -16,9 +16,9 @@ import {
 import type { SeatingCanvasHandle } from "@/components/seating/SeatingCanvas";
 import {
   api,
+  getActiveWedding,
   getActiveWeddingId,
   type Guest,
-  type Wedding,
 } from "@/lib/api";
 import {
   applyTableGeometry,
@@ -77,16 +77,15 @@ export default function SeatingPage() {
   const canvasRef = useRef<SeatingCanvasHandle>(null);
 
   const load = useCallback(async (id: number) => {
-    const [seating, guestList, weddings] = await Promise.all([
+    const [seating, guestList] = await Promise.all([
       api.getSeating(id),
       api.listGuests(id),
-      api.listWeddings(),
     ]);
     setPlan(normalizePlan(seating.plan));
     setVersion(seating.version);
     setGuests(guestList);
-    const active = weddings.find((w: Wedding) => w.id === id);
-    setWeddingTitle(active?.title ?? `Wedding #${id}`);
+    const active = getActiveWedding();
+    setWeddingTitle(active?.id === id ? active.title : `Wedding #${id}`);
   }, []);
 
   useEffect(() => {

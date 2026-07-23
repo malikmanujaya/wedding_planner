@@ -20,6 +20,8 @@ import {
   Globe,
   Images,
   Mail,
+  Shield,
+  UserCog,
 } from "lucide-react";
 import { api, getStoredUser, startAuthSession } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -55,16 +57,28 @@ const nav = [
   { href: "/public-page", label: "Public page", icon: Globe },
 ];
 
+const adminNav = [
+  { href: "/admin/users", label: "Users", icon: UserCog },
+  { href: "/admin/roles", label: "Roles", icon: Shield },
+];
+
 function NavLinks({
   onNavigate,
   collapsed,
+  showAdmin,
 }: {
   onNavigate?: () => void;
   collapsed?: boolean;
+  showAdmin?: boolean;
 }) {
   const pathname = usePathname();
   return (
     <nav className={cn("flex flex-col gap-1", collapsed ? "px-2" : "px-3")}>
+      {showAdmin && !collapsed && (
+        <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-sidebar-foreground/40">
+          Planning
+        </p>
+      )}
       {nav.map((item) => {
         const Icon = item.icon;
         const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -87,6 +101,38 @@ function NavLinks({
           </Link>
         );
       })}
+      {showAdmin && (
+        <>
+          {!collapsed && (
+            <p className="px-3 pb-1 pt-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-sidebar-foreground/40">
+              Administration
+            </p>
+          )}
+          {collapsed && <Separator className="my-2 bg-sidebar-border" />}
+          {adminNav.map((item) => {
+            const Icon = item.icon;
+            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onNavigate}
+                title={collapsed ? item.label : undefined}
+                className={cn(
+                  "flex items-center rounded-md text-sm transition-colors",
+                  collapsed ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2",
+                  active
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground/75 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+                )}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                {!collapsed && <span className="truncate">{item.label}</span>}
+              </Link>
+            );
+          })}
+        </>
+      )}
     </nav>
   );
 }
@@ -94,9 +140,11 @@ function NavLinks({
 function SidebarBody({
   onNavigate,
   collapsed,
+  showAdmin,
 }: {
   onNavigate?: () => void;
   collapsed?: boolean;
+  showAdmin?: boolean;
 }) {
   return (
     <div className="flex h-full flex-col">
@@ -122,7 +170,7 @@ function SidebarBody({
       </div>
       <Separator className="bg-sidebar-border" />
       <div className="mt-4 flex-1 overflow-y-auto">
-        <NavLinks onNavigate={onNavigate} collapsed={collapsed} />
+        <NavLinks onNavigate={onNavigate} collapsed={collapsed} showAdmin={showAdmin} />
       </div>
       <div className={cn("pb-4", collapsed ? "px-2" : "px-3")}>
         <Link
@@ -146,6 +194,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [name, setName] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
+  const [roles, setRoles] = useState<string[]>([]);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
@@ -157,8 +206,31 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
     setName(user.fullName);
     setEmail(user.email);
+    setRoles(user.roles ?? []);
     startAuthSession();
-  }, [router]);
+    api
+      .me()
+      .then((me) => {
+        setRoles(me.roles ?? []);
+        const stored = getStoredUser();
+        if (stored) {
+          localStorage.setItem(
+            "wp_user",
+            JSON.stringify({
+              userId: me.id,
+              email: me.email,
+              fullName: me.fullName,
+              roles: me.roles ?? [],
+            })
+          );
+        }
+      })
+      .catch(() => {
+        /* keep stored roles */
+      });
+    // Mount once — avoid re-fetching /api/auth/me on every navigation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const stored = localStorage.getItem(SIDEBAR_KEY);
@@ -193,6 +265,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     .slice(0, 2)
     .toUpperCase();
 
+  const showAdmin = roles.includes("SUPER_ADMIN") || roles.includes("ADMIN");
+
   return (
     <div className="flex min-h-screen bg-background">
       <Toaster />
@@ -202,7 +276,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           collapsed ? "w-[4.5rem]" : "w-64"
         )}
       >
-        <SidebarBody collapsed={collapsed} />
+        <SidebarBody collapsed={collapsed} showAdmin={showAdmin} />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -216,7 +290,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-64 p-0">
-                <SidebarBody onNavigate={() => setMobileOpen(false)} />
+                <SidebarBody
+                  showAdmin={showAdmin}
+                  onNavigate={() => setMobileOpen(false)}
+                />
               </SheetContent>
             </Sheet>
 
@@ -255,6 +332,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <div className="flex flex-col">
                   <span>{name}</span>
                   <span className="text-xs font-normal text-muted-foreground">{email}</span>
+                  {roles.length > 0 && (
+                    <span className="mt-1 text-[10px] font-medium uppercase tracking-wide text-primary">
+                      {roles.join(" · ")}
+                    </span>
+                  )}
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />

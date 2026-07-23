@@ -34,6 +34,11 @@ app:
     refresh-expiration-ms: 604800000
   cors:
     allowed-origins: "http://localhost:3000"
+  seed:
+    superadmin:
+      email: superadmin@aisle.local
+      password: SuperAdmin@123
+      full-name: Super Admin
 
 springdoc:
   api-docs:

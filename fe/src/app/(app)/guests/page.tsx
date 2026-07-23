@@ -7,9 +7,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Download, Link2, Pencil, Plus, QrCode, Trash2, Upload } from "lucide-react";
 import {
   api,
+  getActiveWedding,
   getActiveWeddingId,
   type Guest,
-  type Wedding,
 } from "@/lib/api";
 import { guestSchema, type GuestFormValues } from "@/lib/schemas";
 import { toast } from "@/components/ui/toast";
@@ -106,21 +106,17 @@ export default function GuestsPage() {
     defaultValues: emptyForm(),
   });
 
-  const load = useCallback(
-    async (id: number, query = q, rsvp = rsvpFilter) => {
-      const [list, weddings] = await Promise.all([
-        api.listGuests(id, {
-          q: query || undefined,
-          rsvp: rsvp || undefined,
-        }),
-        api.listWeddings(),
-      ]);
-      setGuests(list);
-      const active = weddings.find((w: Wedding) => w.id === id);
-      setWeddingTitle(active?.title ?? `Wedding #${id}`);
-    },
-    [q, rsvpFilter]
-  );
+  const load = useCallback(async (id: number, query = "", rsvp = "") => {
+    const list = await api.listGuests(id, {
+      q: query || undefined,
+      rsvp: rsvp || undefined,
+    });
+    setGuests(list);
+    const active = getActiveWedding();
+    setWeddingTitle(
+      active?.id === id ? active.title : `Wedding #${id}`
+    );
+  }, []);
 
   useEffect(() => {
     const id = getActiveWeddingId();

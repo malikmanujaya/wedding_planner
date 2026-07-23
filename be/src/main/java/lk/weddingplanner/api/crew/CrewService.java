@@ -8,11 +8,13 @@ import lk.weddingplanner.api.common.ApiException;
 import lk.weddingplanner.api.crew.dto.InviteCrewRequest;
 import lk.weddingplanner.api.crew.dto.InviteCrewResponse;
 import lk.weddingplanner.api.crew.dto.UpdateCrewRequest;
-import lk.weddingplanner.api.domain.GlobalRole;
 import lk.weddingplanner.api.domain.MembershipRole;
+import lk.weddingplanner.api.domain.Role;
+import lk.weddingplanner.api.domain.SystemRoles;
 import lk.weddingplanner.api.domain.User;
 import lk.weddingplanner.api.domain.Wedding;
 import lk.weddingplanner.api.domain.WeddingMembership;
+import lk.weddingplanner.api.repository.RoleRepository;
 import lk.weddingplanner.api.repository.UserRepository;
 import lk.weddingplanner.api.repository.WeddingMembershipRepository;
 import lk.weddingplanner.api.security.UserPrincipal;
@@ -37,6 +39,7 @@ public class CrewService {
     private final WeddingAccessService weddingAccessService;
     private final WeddingMembershipRepository membershipRepository;
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
@@ -73,7 +76,15 @@ public class CrewService {
             user.setEmail(email);
             user.setFullName(request.fullName().trim());
             user.setPasswordHash(passwordEncoder.encode(tempPassword));
-            user.setGlobalRole(GlobalRole.USER);
+            Role userRole =
+                    roleRepository
+                            .findByCodeIgnoreCase(SystemRoles.USER)
+                            .orElseThrow(
+                                    () ->
+                                            new ApiException(
+                                                    "Default USER role is missing",
+                                                    HttpStatus.INTERNAL_SERVER_ERROR));
+            user.getRoles().add(userRole);
             userRepository.save(user);
             createdNewUser = true;
         }

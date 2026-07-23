@@ -7,9 +7,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import {
   api,
+  getActiveWedding,
   getActiveWeddingId,
   type ChecklistTask,
-  type Wedding,
   type WeddingMember,
 } from "@/lib/api";
 import { taskSchema, type TaskFormValues } from "@/lib/schemas";
@@ -94,15 +94,14 @@ export default function TasksPage() {
   });
 
   const load = useCallback(async (id: number) => {
-    const [taskList, memberList, weddings] = await Promise.all([
+    const [taskList, memberList] = await Promise.all([
       api.listTasks(id),
       api.listMembers(id),
-      api.listWeddings(),
     ]);
     setTasks(taskList);
     setMembers(memberList);
-    const active = weddings.find((w: Wedding) => w.id === id);
-    setWeddingTitle(active?.title ?? `Wedding #${id}`);
+    const active = getActiveWedding();
+    setWeddingTitle(active?.id === id ? active.title : `Wedding #${id}`);
   }, []);
 
   useEffect(() => {

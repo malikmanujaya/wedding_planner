@@ -2,6 +2,9 @@ package lk.weddingplanner.api.security;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import lk.weddingplanner.api.domain.Role;
 import lk.weddingplanner.api.domain.User;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
@@ -15,6 +18,8 @@ public class UserPrincipal implements UserDetails {
     private final String email;
     private final String passwordHash;
     private final String fullName;
+    private final boolean active;
+    private final Set<String> roleCodes;
     private final Collection<? extends GrantedAuthority> authorities;
 
     public UserPrincipal(User user) {
@@ -22,7 +27,20 @@ public class UserPrincipal implements UserDetails {
         this.email = user.getEmail();
         this.passwordHash = user.getPasswordHash();
         this.fullName = user.getFullName();
-        this.authorities = List.of(new SimpleGrantedAuthority("ROLE_" + user.getGlobalRole().name()));
+        this.active = user.isActive();
+        this.roleCodes =
+                user.getRoles().stream()
+                        .filter(Role::isActive)
+                        .map(Role::getCode)
+                        .collect(Collectors.toSet());
+        this.authorities =
+                roleCodes.stream()
+                        .map(code -> new SimpleGrantedAuthority("ROLE_" + code))
+                        .toList();
+    }
+
+    public boolean hasRole(String code) {
+        return roleCodes.contains(code);
     }
 
     @Override
@@ -47,7 +65,7 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return active;
     }
 
     @Override
@@ -57,6 +75,6 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return active;
     }
 }
