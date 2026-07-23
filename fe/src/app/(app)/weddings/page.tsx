@@ -7,11 +7,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { api, getActiveWeddingId, setActiveWedding, type Wedding } from "@/lib/api";
 import { createWeddingSchema, type CreateWeddingValues } from "@/lib/schemas";
 import { useServerPagination } from "@/hooks/useClientPagination";
+import { useDataTable, type DataTableColumn } from "@/hooks/useDataTable";
 import { toast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TablePagination } from "@/components/ui/table-pagination";
+import {
+  DataTableToolbar,
+  SortableTableHead,
+} from "@/components/ui/data-table-toolbar";
 import {
   Form,
   FormControl,
@@ -24,7 +29,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
@@ -36,6 +40,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+const COLUMNS: DataTableColumn<Wedding>[] = [
+  { id: "title", label: "Title", sortValue: (r) => r.title },
+  { id: "slug", label: "Slug", sortValue: (r) => r.slug },
+  { id: "date", label: "Date", sortValue: (r) => r.weddingDate },
+  { id: "venue", label: "Venue", sortValue: (r) => r.venue },
+  { id: "role", label: "Role", sortValue: (r) => r.membershipRole },
+  { id: "actions", label: "Action", hideable: false, sortable: false },
+];
 export default function WeddingsPage() {
   const [weddings, setWeddings] = useState<Wedding[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +62,8 @@ export default function WeddingsPage() {
     to,
     applyPage,
   } = useServerPagination();
+  const table = useDataTable("weddings", COLUMNS, weddings);
+  const visibleColCount = table.columns.filter((c) => table.isVisible(c.id)).length;
   const form = useForm<CreateWeddingValues>({
     resolver: zodResolver(createWeddingSchema),
     defaultValues: { title: "", weddingDate: "", venue: "" },
@@ -167,56 +181,131 @@ export default function WeddingsPage() {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">Your weddings</CardTitle>
-          <CardDescription>{total} total</CardDescription>
+        <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 space-y-0">
+          <div>
+            <CardTitle className="text-xl">Your weddings</CardTitle>
+            <CardDescription>{total} total</CardDescription>
+          </div>
+          <DataTableToolbar
+            onRefresh={() => {
+              void load();
+            }}
+            columns={table.columns as DataTableColumn<unknown>[]}
+            isVisible={table.isVisible}
+            onToggleColumn={table.toggleColumn}
+          />
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Slug</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Venue</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead className="text-right">Action</TableHead>
+                {table.isVisible("title") && (
+                  <SortableTableHead
+                    columnId="title"
+                    label="Title"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("slug") && (
+                  <SortableTableHead
+                    columnId="slug"
+                    label="Slug"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("date") && (
+                  <SortableTableHead
+                    columnId="date"
+                    label="Date"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("venue") && (
+                  <SortableTableHead
+                    columnId="venue"
+                    label="Venue"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("role") && (
+                  <SortableTableHead
+                    columnId="role"
+                    label="Role"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("actions") && (
+                  <SortableTableHead
+                    columnId="actions"
+                    label="Action"
+                    sortable={false}
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                    className="text-right"
+                  />
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {weddings.map((w) => (
+              {table.sortedRows.map((w) => (
                 <TableRow key={w.id}>
-                  <TableCell className="font-medium">{w.title}</TableCell>
-                  <TableCell className="text-muted-foreground">/{w.slug}</TableCell>
-                  <TableCell>{w.weddingDate ?? "—"}</TableCell>
-                  <TableCell>{w.venue ?? "—"}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{w.membershipRole}</Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button size="sm" variant="ghost" asChild>
-                        <Link href={`/w/${w.slug}`} target="_blank">
-                          Site
-                        </Link>
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setActiveWedding(w);
-                          toast.success(`Active wedding: ${w.title}`);
-                        }}
-                      >
-                        Set active
-                      </Button>
-                    </div>
-                  </TableCell>
+                  {table.isVisible("title") && (
+                    <TableCell className="font-medium">{w.title}</TableCell>
+                  )}
+                  {table.isVisible("slug") && (
+                    <TableCell className="text-muted-foreground">/{w.slug}</TableCell>
+                  )}
+                  {table.isVisible("date") && (
+                    <TableCell>{w.weddingDate ?? "—"}</TableCell>
+                  )}
+                  {table.isVisible("venue") && (
+                    <TableCell>{w.venue ?? "—"}</TableCell>
+                  )}
+                  {table.isVisible("role") && (
+                    <TableCell>
+                      <Badge variant="secondary">{w.membershipRole}</Badge>
+                    </TableCell>
+                  )}
+                  {table.isVisible("actions") && (
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button size="sm" variant="ghost" asChild>
+                          <Link href={`/w/${w.slug}`} target="_blank">
+                            Site
+                          </Link>
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setActiveWedding(w);
+                            toast.success(`Active wedding: ${w.title}`);
+                          }}
+                        >
+                          Set active
+                        </Button>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
               {!total && (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                  <TableCell
+                    colSpan={visibleColCount || 6}
+                    className="h-24 text-center text-muted-foreground"
+                  >
                     No weddings yet. Create one above.
                   </TableCell>
                 </TableRow>

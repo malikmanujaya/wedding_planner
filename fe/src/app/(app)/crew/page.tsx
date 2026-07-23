@@ -21,12 +21,17 @@ import {
   type UpdateCrewValues,
 } from "@/lib/schemas";
 import { useServerPagination } from "@/hooks/useClientPagination";
+import { useDataTable, type DataTableColumn } from "@/hooks/useDataTable";
 import { toast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { TablePagination } from "@/components/ui/table-pagination";
+import {
+  DataTableToolbar,
+  SortableTableHead,
+} from "@/components/ui/data-table-toolbar";
 import {
   Form,
   FormControl,
@@ -39,7 +44,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
@@ -59,6 +63,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+const COLUMNS: DataTableColumn<WeddingMember>[] = [
+  { id: "name", label: "Name", sortValue: (r) => r.fullName },
+  { id: "email", label: "Email", sortValue: (r) => r.email },
+  { id: "role", label: "Role", sortValue: (r) => r.role },
+  { id: "responsibilities", label: "Responsibilities", sortValue: (r) => r.responsibilities },
+  { id: "actions", label: "Actions", hideable: false, sortable: false },
+];
 export default function CrewPage() {
   const [weddingId, setWeddingId] = useState<number | null>(null);
   const [wedding, setWedding] = useState<Wedding | null>(null);
@@ -80,6 +91,9 @@ export default function CrewPage() {
     to,
     applyPage,
   } = useServerPagination();
+
+  const table = useDataTable("crew", COLUMNS, crew);
+  const visibleColCount = table.columns.filter((c) => table.isVisible(c.id)).length;
 
   const inviteForm = useForm<InviteCrewValues>({
     resolver: zodResolver(inviteCrewSchema),
@@ -278,65 +292,130 @@ export default function CrewPage() {
       )}
 
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <UsersRound className="h-5 w-5" />
-            Team
-          </CardTitle>
-          <CardDescription>
-            {total} member{total === 1 ? "" : "s"}
-            {wedding?.inviteCode ? ` · invite code ${wedding.inviteCode}` : ""}
-          </CardDescription>
+        <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 space-y-0">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <UsersRound className="h-5 w-5" />
+              Team
+            </CardTitle>
+            <CardDescription>
+              {total} member{total === 1 ? "" : "s"}
+              {wedding?.inviteCode ? ` · invite code ${wedding.inviteCode}` : ""}
+            </CardDescription>
+          </div>
+          <DataTableToolbar
+            onRefresh={() => {
+              if (weddingId) void load(weddingId);
+            }}
+            columns={table.columns as DataTableColumn<unknown>[]}
+            isVisible={table.isVisible}
+            onToggleColumn={table.toggleColumn}
+          />
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Responsibilities</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                {table.isVisible("name") && (
+                  <SortableTableHead
+                    columnId="name"
+                    label="Name"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("email") && (
+                  <SortableTableHead
+                    columnId="email"
+                    label="Email"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("role") && (
+                  <SortableTableHead
+                    columnId="role"
+                    label="Role"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("responsibilities") && (
+                  <SortableTableHead
+                    columnId="responsibilities"
+                    label="Responsibilities"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("actions") && (
+                  <SortableTableHead
+                    columnId="actions"
+                    label="Actions"
+                    sortable={false}
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                    className="text-right"
+                  />
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {crew.map((member) => (
+              {table.sortedRows.map((member) => (
                 <TableRow key={member.membershipId}>
-                  <TableCell className="font-medium">{member.fullName}</TableCell>
-                  <TableCell className="text-muted-foreground">{member.email}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{member.role}</Badge>
-                  </TableCell>
-                  <TableCell className="max-w-[240px] truncate text-muted-foreground">
-                    {member.responsibilities || "—"}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => openEdit(member)}
-                        aria-label="Edit member"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      {member.role !== "OWNER" && (
+                  {table.isVisible("name") && (
+                    <TableCell className="font-medium">{member.fullName}</TableCell>
+                  )}
+                  {table.isVisible("email") && (
+                    <TableCell className="text-muted-foreground">{member.email}</TableCell>
+                  )}
+                  {table.isVisible("role") && (
+                    <TableCell>
+                      <Badge variant="secondary">{member.role}</Badge>
+                    </TableCell>
+                  )}
+                  {table.isVisible("responsibilities") && (
+                    <TableCell className="max-w-[240px] truncate text-muted-foreground">
+                      {member.responsibilities || "—"}
+                    </TableCell>
+                  )}
+                  {table.isVisible("actions") && (
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
                         <Button
                           size="icon"
                           variant="ghost"
-                          onClick={() => onRemove(member)}
-                          aria-label="Remove member"
+                          onClick={() => openEdit(member)}
+                          aria-label="Edit member"
                         >
-                          <Trash2 className="h-4 w-4 text-destructive" />
+                          <Pencil className="h-4 w-4" />
                         </Button>
-                      )}
-                    </div>
-                  </TableCell>
+                        {member.role !== "OWNER" && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => onRemove(member)}
+                            aria-label="Remove member"
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
               {!total && (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                  <TableCell
+                    colSpan={visibleColCount || 5}
+                    className="h-24 text-center text-muted-foreground"
+                  >
                     No crew yet.
                   </TableCell>
                 </TableRow>

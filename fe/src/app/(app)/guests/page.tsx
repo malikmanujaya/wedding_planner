@@ -13,6 +13,7 @@ import {
 } from "@/lib/api";
 import { guestSchema, type GuestFormValues } from "@/lib/schemas";
 import { useServerPagination } from "@/hooks/useClientPagination";
+import { useDataTable, type DataTableColumn } from "@/hooks/useDataTable";
 import { toast } from "@/components/ui/toast";
 import { QrCodeImage } from "@/components/QrCodeImage";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { TablePagination } from "@/components/ui/table-pagination";
+import {
+  DataTableToolbar,
+  SortableTableHead,
+} from "@/components/ui/data-table-toolbar";
 import {
   Form,
   FormControl,
@@ -52,6 +57,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+const COLUMNS: DataTableColumn<Guest>[] = [
+  { id: "select", label: "Select", hideable: false, sortable: false },
+  { id: "name", label: "Name", sortValue: (r) => r.fullName },
+  { id: "household", label: "Household", sortValue: (r) => r.household },
+  { id: "rsvp", label: "RSVP", sortValue: (r) => r.rsvpStatus },
+  { id: "meal", label: "Meal", sortValue: (r) => r.mealPreference },
+  { id: "table", label: "Table", sortValue: (r) => r.tableLabel },
+  { id: "actions", label: "Actions", hideable: false, sortable: false },
+];
 const rsvpVariant: Record<Guest["rsvpStatus"], "outline" | "success" | "secondary" | "default"> = {
   PENDING: "outline",
   ACCEPTED: "success",
@@ -117,6 +131,9 @@ export default function GuestsPage() {
     to,
     applyPage,
   } = useServerPagination();
+
+  const table = useDataTable("guests", COLUMNS, guests);
+  const visibleColCount = table.columns.filter((c) => table.isVisible(c.id)).length;
 
   const form = useForm<GuestFormValues>({
     resolver: zodResolver(guestSchema),
@@ -283,8 +300,8 @@ export default function GuestsPage() {
   }
 
   function toggleAll() {
-    if (selected.size === guests.length) setSelected(new Set());
-    else setSelected(new Set(guests.map((g) => g.id)));
+    if (selected.size === table.sortedRows.length) setSelected(new Set());
+    else setSelected(new Set(table.sortedRows.map((g) => g.id)));
   }
 
   async function bulkRsvp(status: Guest["rsvpStatus"]) {
@@ -415,12 +432,12 @@ export default function GuestsPage() {
       </div>
 
       <Card>
-        <CardHeader className="gap-4 space-y-0 sm:flex-row sm:items-end sm:justify-between">
+        <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 space-y-0">
           <div>
             <CardTitle className="text-xl">Guest list</CardTitle>
             <CardDescription>{total} shown</CardDescription>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Input
               placeholder="Search name, household, tags…"
               value={q}
@@ -441,6 +458,14 @@ export default function GuestsPage() {
             <Button variant="secondary" onClick={applyFilters}>
               Apply
             </Button>
+            <DataTableToolbar
+              onRefresh={() => {
+                if (weddingId) void load(weddingId);
+              }}
+              columns={table.columns as DataTableColumn<unknown>[]}
+              isVisible={table.isVisible}
+              onToggleColumn={table.toggleColumn}
+            />
           </div>
         </CardHeader>
         {selected.size > 0 && (
@@ -461,69 +486,141 @@ export default function GuestsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-10">
-                  <input
-                    type="checkbox"
-                    checked={guests.length > 0 && selected.size === guests.length}
-                    onChange={toggleAll}
-                    aria-label="Select all"
+                {table.isVisible("select") && (
+                  <TableHead className="w-10">
+                    <input
+                      type="checkbox"
+                      checked={
+                        table.sortedRows.length > 0 &&
+                        selected.size === table.sortedRows.length
+                      }
+                      onChange={toggleAll}
+                      aria-label="Select all"
+                    />
+                  </TableHead>
+                )}
+                {table.isVisible("name") && (
+                  <SortableTableHead
+                    columnId="name"
+                    label="Name"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
                   />
-                </TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Household</TableHead>
-                <TableHead>RSVP</TableHead>
-                <TableHead>Meal</TableHead>
-                <TableHead>Table</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                )}
+                {table.isVisible("household") && (
+                  <SortableTableHead
+                    columnId="household"
+                    label="Household"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("rsvp") && (
+                  <SortableTableHead
+                    columnId="rsvp"
+                    label="RSVP"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("meal") && (
+                  <SortableTableHead
+                    columnId="meal"
+                    label="Meal"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("table") && (
+                  <SortableTableHead
+                    columnId="table"
+                    label="Table"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("actions") && (
+                  <SortableTableHead
+                    columnId="actions"
+                    label="Actions"
+                    sortable={false}
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                    className="text-right"
+                  />
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {guests.map((guest) => (
+              {table.sortedRows.map((guest) => (
                 <TableRow key={guest.id}>
-                  <TableCell>
-                    <input
-                      type="checkbox"
-                      checked={selected.has(guest.id)}
-                      onChange={() => toggleOne(guest.id)}
-                      aria-label={`Select ${guest.fullName}`}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <div className="font-medium">{guest.fullName}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {[guest.email, guest.phone].filter(Boolean).join(" · ") || "—"}
-                    </div>
-                  </TableCell>
-                  <TableCell>{guest.household ?? "—"}</TableCell>
-                  <TableCell>
-                    <Badge variant={rsvpVariant[guest.rsvpStatus]}>{guest.rsvpStatus}</Badge>
-                  </TableCell>
-                  <TableCell>{guest.mealPreference ?? "—"}</TableCell>
-                  <TableCell>{guest.tableLabel ?? "—"}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        title="Invite / QR"
-                        disabled={inviteBusy}
-                        onClick={() => openInvite(guest)}
-                      >
-                        <QrCode className="h-4 w-4" />
-                      </Button>
-                      <Button size="icon" variant="ghost" onClick={() => openEdit(guest)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button size="icon" variant="ghost" onClick={() => onDelete(guest)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                  {table.isVisible("select") && (
+                    <TableCell>
+                      <input
+                        type="checkbox"
+                        checked={selected.has(guest.id)}
+                        onChange={() => toggleOne(guest.id)}
+                        aria-label={`Select ${guest.fullName}`}
+                      />
+                    </TableCell>
+                  )}
+                  {table.isVisible("name") && (
+                    <TableCell>
+                      <div className="font-medium">{guest.fullName}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {[guest.email, guest.phone].filter(Boolean).join(" · ") || "—"}
+                      </div>
+                    </TableCell>
+                  )}
+                  {table.isVisible("household") && (
+                    <TableCell>{guest.household ?? "—"}</TableCell>
+                  )}
+                  {table.isVisible("rsvp") && (
+                    <TableCell>
+                      <Badge variant={rsvpVariant[guest.rsvpStatus]}>{guest.rsvpStatus}</Badge>
+                    </TableCell>
+                  )}
+                  {table.isVisible("meal") && (
+                    <TableCell>{guest.mealPreference ?? "—"}</TableCell>
+                  )}
+                  {table.isVisible("table") && (
+                    <TableCell>{guest.tableLabel ?? "—"}</TableCell>
+                  )}
+                  {table.isVisible("actions") && (
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Invite / QR"
+                          disabled={inviteBusy}
+                          onClick={() => openInvite(guest)}
+                        >
+                          <QrCode className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" onClick={() => openEdit(guest)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" onClick={() => onDelete(guest)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
               {!total && (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                  <TableCell
+                    colSpan={visibleColCount || 7}
+                    className="h-24 text-center text-muted-foreground"
+                  >
                     No guests yet. Add one or import a CSV.
                   </TableCell>
                 </TableRow>

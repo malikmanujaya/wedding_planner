@@ -11,6 +11,7 @@ import {
   type PlatformRole,
 } from "@/lib/api";
 import { useServerPagination } from "@/hooks/useClientPagination";
+import { useDataTable, type DataTableColumn } from "@/hooks/useDataTable";
 import { toast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,10 +19,13 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { TablePagination } from "@/components/ui/table-pagination";
 import {
+  DataTableToolbar,
+  SortableTableHead,
+} from "@/components/ui/data-table-toolbar";
+import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
@@ -49,6 +53,18 @@ const emptyForm = {
   active: true,
 };
 
+const COLUMNS: DataTableColumn<AdminUser>[] = [
+  { id: "name", label: "Name", sortValue: (r) => r.fullName },
+  { id: "email", label: "Email", sortValue: (r) => r.email },
+  {
+    id: "roles",
+    label: "Roles",
+    sortValue: (r) => r.roles.map((role) => role.code).join(","),
+  },
+  { id: "status", label: "Status", sortValue: (r) => r.active },
+  { id: "actions", label: "Actions", hideable: false, sortable: false },
+];
+
 function isPlatformAdmin(roles: string[] | undefined) {
   return !!roles?.some((r) => r === "SUPER_ADMIN" || r === "ADMIN");
 }
@@ -75,6 +91,9 @@ export default function AdminUsersPage() {
     to,
     applyPage,
   } = useServerPagination();
+
+  const table = useDataTable("admin-users", COLUMNS, users);
+  const visibleColCount = table.columns.filter((c) => table.isVisible(c.id)).length;
 
   const assignableRoles = useMemo(
     () =>
@@ -210,67 +229,132 @@ export default function AdminUsersPage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <Users className="h-5 w-5" />
-            All users
-          </CardTitle>
-          <CardDescription>{total} account(s)</CardDescription>
+        <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 space-y-0">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <Users className="h-5 w-5" />
+              All users
+            </CardTitle>
+            <CardDescription>{total} account(s)</CardDescription>
+          </div>
+          <DataTableToolbar
+            onRefresh={() => {
+              void load();
+            }}
+            columns={table.columns as DataTableColumn<unknown>[]}
+            isVisible={table.isVisible}
+            onToggleColumn={table.toggleColumn}
+          />
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Roles</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[100px]" />
+                {table.isVisible("name") && (
+                  <SortableTableHead
+                    columnId="name"
+                    label="Name"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("email") && (
+                  <SortableTableHead
+                    columnId="email"
+                    label="Email"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("roles") && (
+                  <SortableTableHead
+                    columnId="roles"
+                    label="Roles"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("status") && (
+                  <SortableTableHead
+                    columnId="status"
+                    label="Status"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("actions") && (
+                  <SortableTableHead
+                    columnId="actions"
+                    label=""
+                    sortable={false}
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                    className="w-[100px]"
+                  />
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user) => (
+              {table.sortedRows.map((user) => (
                 <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.fullName}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {user.roles.map((r) => (
-                        <Badge
-                          key={r.id}
-                          variant={r.systemRole ? "secondary" : "outline"}
-                        >
-                          {r.code}
-                        </Badge>
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={user.active ? "success" : "outline"}>
-                      {user.active ? "Active" : "Disabled"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex justify-end gap-1">
-                      <Button size="icon" variant="ghost" onClick={() => openEdit(user)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      {isSuperAdmin && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => onDelete(user)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
+                  {table.isVisible("name") && (
+                    <TableCell className="font-medium">{user.fullName}</TableCell>
+                  )}
+                  {table.isVisible("email") && (
+                    <TableCell>{user.email}</TableCell>
+                  )}
+                  {table.isVisible("roles") && (
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {user.roles.map((r) => (
+                          <Badge
+                            key={r.id}
+                            variant={r.systemRole ? "secondary" : "outline"}
+                          >
+                            {r.code}
+                          </Badge>
+                        ))}
+                      </div>
+                    </TableCell>
+                  )}
+                  {table.isVisible("status") && (
+                    <TableCell>
+                      <Badge variant={user.active ? "success" : "outline"}>
+                        {user.active ? "Active" : "Disabled"}
+                      </Badge>
+                    </TableCell>
+                  )}
+                  {table.isVisible("actions") && (
+                    <TableCell>
+                      <div className="flex justify-end gap-1">
+                        <Button size="icon" variant="ghost" onClick={() => openEdit(user)}>
+                          <Pencil className="h-4 w-4" />
                         </Button>
-                      )}
-                    </div>
-                  </TableCell>
+                        {isSuperAdmin && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => onDelete(user)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
               {!total && (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                  <TableCell
+                    colSpan={visibleColCount || 5}
+                    className="h-24 text-center text-muted-foreground"
+                  >
                     No users yet.
                   </TableCell>
                 </TableRow>

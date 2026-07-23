@@ -14,12 +14,17 @@ import {
 } from "@/lib/api";
 import { vendorSchema, type VendorFormValues } from "@/lib/schemas";
 import { useServerPagination } from "@/hooks/useClientPagination";
+import { useDataTable, type DataTableColumn } from "@/hooks/useDataTable";
 import { toast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { TablePagination } from "@/components/ui/table-pagination";
+import {
+  DataTableToolbar,
+  SortableTableHead,
+} from "@/components/ui/data-table-toolbar";
 import {
   Form,
   FormControl,
@@ -32,7 +37,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
@@ -52,6 +56,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+const COLUMNS: DataTableColumn<WeddingVendor>[] = [
+  { id: "name", label: "Name", sortValue: (r) => r.name },
+  { id: "category", label: "Category", sortValue: (r) => r.category },
+  { id: "status", label: "Status", sortValue: (r) => r.status },
+  { id: "quote", label: "Quote", sortValue: (r) => r.quotedAmount },
+  { id: "paid", label: "Paid / Remaining", sortValue: (r) => r.totalPaid },
+  { id: "nextDue", label: "Next due", sortValue: (r) => r.nextDueDate },
+  { id: "actions", label: "Actions", hideable: false, sortable: false },
+];
 const CATEGORIES: WeddingVendor["category"][] = [
   "DJ",
   "BAND",
@@ -182,6 +195,9 @@ export default function VendorsPage() {
     to,
     applyPage,
   } = useServerPagination();
+
+  const table = useDataTable("vendors", COLUMNS, vendors);
+  const visibleColCount = table.columns.filter((c) => table.isVisible(c.id)).length;
 
   const form = useForm<VendorFormValues>({
     resolver: zodResolver(vendorSchema),
@@ -387,7 +403,7 @@ export default function VendorsPage() {
       </div>
 
       <Card>
-        <CardHeader className="gap-4 space-y-0 sm:flex-row sm:items-end sm:justify-between">
+        <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 space-y-0">
           <div>
             <CardTitle className="flex items-center gap-2 text-xl">
               <Store className="h-5 w-5" />
@@ -398,7 +414,7 @@ export default function VendorsPage() {
               dates
             </CardDescription>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Input
               placeholder="Search name or contact…"
               value={q}
@@ -420,86 +436,169 @@ export default function VendorsPage() {
             <Button variant="secondary" onClick={applyFilters}>
               Apply
             </Button>
+            <DataTableToolbar
+              onRefresh={() => {
+                if (weddingId) void load(weddingId);
+              }}
+              columns={table.columns as DataTableColumn<unknown>[]}
+              isVisible={table.isVisible}
+              onToggleColumn={table.toggleColumn}
+            />
           </div>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Quote</TableHead>
-                <TableHead>Paid / Remaining</TableHead>
-                <TableHead>Next due</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                {table.isVisible("name") && (
+                  <SortableTableHead
+                    columnId="name"
+                    label="Name"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("category") && (
+                  <SortableTableHead
+                    columnId="category"
+                    label="Category"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("status") && (
+                  <SortableTableHead
+                    columnId="status"
+                    label="Status"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("quote") && (
+                  <SortableTableHead
+                    columnId="quote"
+                    label="Quote"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("paid") && (
+                  <SortableTableHead
+                    columnId="paid"
+                    label="Paid / Remaining"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("nextDue") && (
+                  <SortableTableHead
+                    columnId="nextDue"
+                    label="Next due"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("actions") && (
+                  <SortableTableHead
+                    columnId="actions"
+                    label="Actions"
+                    sortable={false}
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                    className="text-right"
+                  />
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {vendors.map((vendor) => (
+              {table.sortedRows.map((vendor) => (
                 <TableRow key={vendor.id}>
-                  <TableCell>
-                    <div className="font-medium">{vendor.name}</div>
-                    {vendor.notes && (
-                      <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
-                        {vendor.notes}
-                      </p>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{vendor.category}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={statusVariant[vendor.status]}>{vendor.status}</Badge>
-                  </TableCell>
-                  <TableCell>{formatAmount(vendor.quotedAmount)}</TableCell>
-                  <TableCell className="text-sm">
-                    <div>{formatAmount(vendor.totalPaid)}</div>
-                    <div
-                      className={
-                        (vendor.remainingAmount ?? 0) > 0
-                          ? "text-xs text-muted-foreground"
-                          : "text-xs text-emerald-700"
-                      }
-                    >
-                      {(vendor.remainingAmount ?? 0) > 0
-                        ? `${formatAmount(vendor.remainingAmount)} left`
-                        : "Settled"}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {vendor.nextDueDate ? (
-                      <span
+                  {table.isVisible("name") && (
+                    <TableCell>
+                      <div className="font-medium">{vendor.name}</div>
+                      {vendor.notes && (
+                        <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                          {vendor.notes}
+                        </p>
+                      )}
+                    </TableCell>
+                  )}
+                  {table.isVisible("category") && (
+                    <TableCell>
+                      <Badge variant="secondary">{vendor.category}</Badge>
+                    </TableCell>
+                  )}
+                  {table.isVisible("status") && (
+                    <TableCell>
+                      <Badge variant={statusVariant[vendor.status]}>{vendor.status}</Badge>
+                    </TableCell>
+                  )}
+                  {table.isVisible("quote") && (
+                    <TableCell>{formatAmount(vendor.quotedAmount)}</TableCell>
+                  )}
+                  {table.isVisible("paid") && (
+                    <TableCell className="text-sm">
+                      <div>{formatAmount(vendor.totalPaid)}</div>
+                      <div
                         className={
-                          vendor.payments?.some((p) => p.status === "OVERDUE")
-                            ? "text-destructive"
-                            : ""
+                          (vendor.remainingAmount ?? 0) > 0
+                            ? "text-xs text-muted-foreground"
+                            : "text-xs text-emerald-700"
                         }
                       >
-                        {formatDate(vendor.nextDueDate)}
-                      </span>
-                    ) : (
-                      "—"
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button size="sm" variant="outline" onClick={() => openPayments(vendor)}>
-                        Payments
-                      </Button>
-                      <Button size="icon" variant="ghost" onClick={() => openEdit(vendor)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button size="icon" variant="ghost" onClick={() => onDelete(vendor)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                        {(vendor.remainingAmount ?? 0) > 0
+                          ? `${formatAmount(vendor.remainingAmount)} left`
+                          : "Settled"}
+                      </div>
+                    </TableCell>
+                  )}
+                  {table.isVisible("nextDue") && (
+                    <TableCell className="text-sm">
+                      {vendor.nextDueDate ? (
+                        <span
+                          className={
+                            vendor.payments?.some((p) => p.status === "OVERDUE")
+                              ? "text-destructive"
+                              : ""
+                          }
+                        >
+                          {formatDate(vendor.nextDueDate)}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
+                  )}
+                  {table.isVisible("actions") && (
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button size="sm" variant="outline" onClick={() => openPayments(vendor)}>
+                          Payments
+                        </Button>
+                        <Button size="icon" variant="ghost" onClick={() => openEdit(vendor)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" onClick={() => onDelete(vendor)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
               {!total && (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                  <TableCell
+                    colSpan={visibleColCount || 7}
+                    className="h-24 text-center text-muted-foreground"
+                  >
                     No vendors yet. Add DJ, Band, Ashtaka, and set advance + remaining dues.
                   </TableCell>
                 </TableRow>

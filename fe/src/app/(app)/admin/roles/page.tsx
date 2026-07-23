@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Pencil, Plus, Shield, Trash2 } from "lucide-react";
 import { api, getStoredUser, type PlatformRole } from "@/lib/api";
 import { useServerPagination } from "@/hooks/useClientPagination";
+import { useDataTable, type DataTableColumn } from "@/hooks/useDataTable";
 import { toast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,10 +13,13 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { TablePagination } from "@/components/ui/table-pagination";
 import {
+  DataTableToolbar,
+  SortableTableHead,
+} from "@/components/ui/data-table-toolbar";
+import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
@@ -41,6 +45,13 @@ const emptyForm = {
   active: true,
 };
 
+const COLUMNS: DataTableColumn<PlatformRole>[] = [
+  { id: "code", label: "Code", sortValue: (r) => r.code },
+  { id: "name", label: "Name", sortValue: (r) => r.name },
+  { id: "type", label: "Type", sortValue: (r) => r.systemRole },
+  { id: "status", label: "Status", sortValue: (r) => r.active },
+  { id: "actions", label: "Actions", hideable: false, sortable: false },
+];
 export default function AdminRolesPage() {
   const router = useRouter();
   const me = getStoredUser();
@@ -61,6 +72,9 @@ export default function AdminRolesPage() {
     to,
     applyPage,
   } = useServerPagination();
+
+  const table = useDataTable("admin-roles", COLUMNS, roles);
+  const visibleColCount = table.columns.filter((c) => table.isVisible(c.id)).length;
 
   const load = useCallback(async () => {
     try {
@@ -164,70 +178,135 @@ export default function AdminRolesPage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <Shield className="h-5 w-5" />
-            Platform roles
-          </CardTitle>
-          <CardDescription>
-            SUPER_ADMIN, ADMIN, USER, VENDOR are system roles. Custom role codes are
-            generated automatically.
-          </CardDescription>
+        <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 space-y-0">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <Shield className="h-5 w-5" />
+              Platform roles
+            </CardTitle>
+            <CardDescription>
+              SUPER_ADMIN, ADMIN, USER, VENDOR are system roles. Custom role codes are
+              generated automatically.
+            </CardDescription>
+          </div>
+          <DataTableToolbar
+            onRefresh={() => {
+              void load();
+            }}
+            columns={table.columns as DataTableColumn<unknown>[]}
+            isVisible={table.isVisible}
+            onToggleColumn={table.toggleColumn}
+          />
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Code</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[100px]" />
+                {table.isVisible("code") && (
+                  <SortableTableHead
+                    columnId="code"
+                    label="Code"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("name") && (
+                  <SortableTableHead
+                    columnId="name"
+                    label="Name"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("type") && (
+                  <SortableTableHead
+                    columnId="type"
+                    label="Type"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("status") && (
+                  <SortableTableHead
+                    columnId="status"
+                    label="Status"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("actions") && (
+                  <SortableTableHead
+                    columnId="actions"
+                    label=""
+                    sortable={false}
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                    className="w-[100px]"
+                  />
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {roles.map((role) => (
+              {table.sortedRows.map((role) => (
                 <TableRow key={role.id}>
-                  <TableCell className="font-mono text-sm">{role.code}</TableCell>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">{role.name}</p>
-                      {role.description && (
-                        <p className="text-xs text-muted-foreground">{role.description}</p>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={role.systemRole ? "secondary" : "outline"}>
-                      {role.systemRole ? "System" : "Custom"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={role.active ? "success" : "outline"}>
-                      {role.active ? "Active" : "Inactive"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex justify-end gap-1">
-                      <Button size="icon" variant="ghost" onClick={() => openEdit(role)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      {!role.systemRole && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => onDelete(role)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
+                  {table.isVisible("code") && (
+                    <TableCell className="font-mono text-sm">{role.code}</TableCell>
+                  )}
+                  {table.isVisible("name") && (
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{role.name}</p>
+                        {role.description && (
+                          <p className="text-xs text-muted-foreground">{role.description}</p>
+                        )}
+                      </div>
+                    </TableCell>
+                  )}
+                  {table.isVisible("type") && (
+                    <TableCell>
+                      <Badge variant={role.systemRole ? "secondary" : "outline"}>
+                        {role.systemRole ? "System" : "Custom"}
+                      </Badge>
+                    </TableCell>
+                  )}
+                  {table.isVisible("status") && (
+                    <TableCell>
+                      <Badge variant={role.active ? "success" : "outline"}>
+                        {role.active ? "Active" : "Inactive"}
+                      </Badge>
+                    </TableCell>
+                  )}
+                  {table.isVisible("actions") && (
+                    <TableCell>
+                      <div className="flex justify-end gap-1">
+                        <Button size="icon" variant="ghost" onClick={() => openEdit(role)}>
+                          <Pencil className="h-4 w-4" />
                         </Button>
-                      )}
-                    </div>
-                  </TableCell>
+                        {!role.systemRole && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => onDelete(role)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
               {!total && (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                  <TableCell
+                    colSpan={visibleColCount || 5}
+                    className="h-24 text-center text-muted-foreground"
+                  >
                     No roles yet.
                   </TableCell>
                 </TableRow>

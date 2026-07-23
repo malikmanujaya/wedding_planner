@@ -14,12 +14,17 @@ import {
 } from "@/lib/api";
 import { taskSchema, type TaskFormValues } from "@/lib/schemas";
 import { useServerPagination } from "@/hooks/useClientPagination";
+import { useDataTable, type DataTableColumn } from "@/hooks/useDataTable";
 import { toast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { TablePagination } from "@/components/ui/table-pagination";
+import {
+  DataTableToolbar,
+  SortableTableHead,
+} from "@/components/ui/data-table-toolbar";
 import {
   Form,
   FormControl,
@@ -32,7 +37,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
@@ -51,6 +55,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
+const COLUMNS: DataTableColumn<ChecklistTask>[] = [
+  { id: "title", label: "Task", sortValue: (r) => r.title },
+  { id: "status", label: "Status", sortValue: (r) => r.status },
+  { id: "dueDate", label: "Due", sortValue: (r) => r.dueDate },
+  { id: "assignee", label: "Assignee", sortValue: (r) => r.assigneeName },
+  { id: "actions", label: "Actions", hideable: false, sortable: false },
+];
 
 const statusVariant: Record<
   ChecklistTask["status"],
@@ -94,6 +106,9 @@ export default function TasksPage() {
     to,
     applyPage,
   } = useServerPagination();
+
+  const table = useDataTable("tasks", COLUMNS, tasks ?? []);
+  const visibleColCount = table.columns.filter((c) => table.isVisible(c.id)).length;
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
@@ -240,66 +255,131 @@ export default function TasksPage() {
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">Checklist</CardTitle>
-          <CardDescription>{total} task{total === 1 ? "" : "s"}</CardDescription>
+        <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 space-y-0">
+          <div>
+            <CardTitle className="text-xl">Checklist</CardTitle>
+            <CardDescription>{total} task{total === 1 ? "" : "s"}</CardDescription>
+          </div>
+          <DataTableToolbar
+            onRefresh={() => {
+              if (weddingId) void load(weddingId);
+            }}
+            columns={table.columns as DataTableColumn<unknown>[]}
+            isVisible={table.isVisible}
+            onToggleColumn={table.toggleColumn}
+          />
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Task</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Due</TableHead>
-                <TableHead>Assignee</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                {table.isVisible("title") && (
+                  <SortableTableHead
+                    columnId="title"
+                    label="Task"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("status") && (
+                  <SortableTableHead
+                    columnId="status"
+                    label="Status"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("dueDate") && (
+                  <SortableTableHead
+                    columnId="dueDate"
+                    label="Due"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("assignee") && (
+                  <SortableTableHead
+                    columnId="assignee"
+                    label="Assignee"
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                  />
+                )}
+                {table.isVisible("actions") && (
+                  <SortableTableHead
+                    columnId="actions"
+                    label="Actions"
+                    sortable={false}
+                    sortKey={table.sortKey}
+                    sortDir={table.sortDir}
+                    onSort={table.toggleSort}
+                    className="text-right"
+                  />
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(tasks ?? []).map((task) => (
+              {table.sortedRows.map((task) => (
                 <TableRow key={task.id}>
-                  <TableCell>
-                    <div className="font-medium">{task.title}</div>
-                    {task.notes && (
-                      <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
-                        {task.notes}
-                      </p>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={statusVariant[task.status]}>
-                      {task.status.replace("_", " ")}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{task.dueDate ?? "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {task.assigneeName ?? "—"}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => openEdit(task)}
-                        aria-label="Edit task"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => onDelete(task)}
-                        aria-label="Delete task"
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                  {table.isVisible("title") && (
+                    <TableCell>
+                      <div className="font-medium">{task.title}</div>
+                      {task.notes && (
+                        <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                          {task.notes}
+                        </p>
+                      )}
+                    </TableCell>
+                  )}
+                  {table.isVisible("status") && (
+                    <TableCell>
+                      <Badge variant={statusVariant[task.status]}>
+                        {task.status.replace("_", " ")}
+                      </Badge>
+                    </TableCell>
+                  )}
+                  {table.isVisible("dueDate") && (
+                    <TableCell>{task.dueDate ?? "—"}</TableCell>
+                  )}
+                  {table.isVisible("assignee") && (
+                    <TableCell className="text-muted-foreground">
+                      {task.assigneeName ?? "—"}
+                    </TableCell>
+                  )}
+                  {table.isVisible("actions") && (
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => openEdit(task)}
+                          aria-label="Edit task"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => onDelete(task)}
+                          aria-label="Delete task"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
               {!total && (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                  <TableCell
+                    colSpan={visibleColCount || 5}
+                    className="h-24 text-center text-muted-foreground"
+                  >
                     No tasks yet. Add your first checklist item.
                   </TableCell>
                 </TableRow>
