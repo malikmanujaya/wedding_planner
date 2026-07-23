@@ -25,10 +25,10 @@ public class DataSeeder implements ApplicationRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${app.seed.superadmin.email:superadmin@aisle.local}")
+    @Value("${app.seed.superadmin.email:malikmanujayawijesuriya98@gmail.com}")
     private String superAdminEmail;
 
-    @Value("${app.seed.superadmin.password:SuperAdmin@123}")
+    @Value("${app.seed.superadmin.password:Malik98$}")
     private String superAdminPassword;
 
     @Value("${app.seed.superadmin.full-name:Super Admin}")
@@ -72,36 +72,38 @@ public class DataSeeder implements ApplicationRunner {
                         .findByCodeIgnoreCase(SystemRoles.SUPER_ADMIN)
                         .orElseThrow();
 
-        userRepository
-                .findByEmailIgnoreCaseWithRoles(superAdminEmail)
-                .ifPresentOrElse(
-                        user -> {
-                            boolean changed = false;
-                            if (!user.hasRole(SystemRoles.SUPER_ADMIN)) {
-                                user.getRoles().add(superRole);
-                                changed = true;
-                                log.info("Attached SUPER_ADMIN role to {}", superAdminEmail);
-                            }
-                            // Keep seed credentials in sync for local/dev resets.
-                            user.setPasswordHash(passwordEncoder.encode(superAdminPassword));
-                            user.setFullName(superAdminName.trim());
-                            user.setActive(true);
-                            changed = true;
-                            if (changed) {
-                                userRepository.save(user);
-                                log.info("Synced SUPER_ADMIN account {}", superAdminEmail);
-                            }
-                        },
-                        () -> {
-                            User user = new User();
-                            user.setEmail(superAdminEmail.trim().toLowerCase());
-                            user.setFullName(superAdminName.trim());
-                            user.setPasswordHash(passwordEncoder.encode(superAdminPassword));
-                            user.setRoles(Set.of(superRole));
-                            user.setActive(true);
-                            userRepository.save(user);
-                            log.info("Seeded SUPER_ADMIN account {}", superAdminEmail);
-                        });
+        String email = superAdminEmail.trim().toLowerCase();
+        User user =
+                userRepository
+                        .findByEmailIgnoreCaseWithRoles(email)
+                        .orElseGet(
+                                () ->
+                                        userRepository.findAllWithRoles().stream()
+                                                .filter(u -> u.hasRole(SystemRoles.SUPER_ADMIN))
+                                                .findFirst()
+                                                .orElse(null));
+
+        if (user != null) {
+            user.setEmail(email);
+            user.setFullName(superAdminName.trim());
+            user.setPasswordHash(passwordEncoder.encode(superAdminPassword));
+            user.setActive(true);
+            if (!user.hasRole(SystemRoles.SUPER_ADMIN)) {
+                user.getRoles().add(superRole);
+            }
+            userRepository.save(user);
+            log.info("Synced SUPER_ADMIN account {}", email);
+            return;
+        }
+
+        User created = new User();
+        created.setEmail(email);
+        created.setFullName(superAdminName.trim());
+        created.setPasswordHash(passwordEncoder.encode(superAdminPassword));
+        created.setRoles(Set.of(superRole));
+        created.setActive(true);
+        userRepository.save(created);
+        log.info("Seeded SUPER_ADMIN account {}", email);
     }
 
     /** Existing H2 users created before role tables get USER if they have none. */

@@ -52,8 +52,6 @@ public class SecurityConfig {
                                                 "/api/auth/login",
                                                 "/api/auth/refresh")
                                         .permitAll()
-                                        .requestMatchers("/h2-console/**")
-                                        .permitAll()
                                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                                         .permitAll()
                                         .requestMatchers(HttpMethod.OPTIONS, "/**")
@@ -71,7 +69,6 @@ public class SecurityConfig {
                                             response.getWriter()
                                                     .write("{\"error\":\"Session expired. Please log in again.\"}");
                                         }))
-                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
