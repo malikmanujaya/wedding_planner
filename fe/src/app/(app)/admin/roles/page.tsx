@@ -4,11 +4,13 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Plus, Shield, Trash2 } from "lucide-react";
 import { api, getStoredUser, type PlatformRole } from "@/lib/api";
+import { useServerPagination } from "@/hooks/useClientPagination";
 import { toast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { TablePagination } from "@/components/ui/table-pagination";
 import {
   Table,
   TableBody,
@@ -48,16 +50,28 @@ export default function AdminRolesPage() {
   const [editing, setEditing] = useState<PlatformRole | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const {
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    total,
+    from,
+    to,
+    applyPage,
+  } = useServerPagination();
 
   const load = useCallback(async () => {
     try {
-      setRoles(await api.listAdminRoles());
+      const result = await api.listAdminRoles({ page, size: pageSize });
+      setRoles(applyPage(result));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to load roles");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page, pageSize, applyPage]);
 
   useEffect(() => {
     const user = getStoredUser();
@@ -211,8 +225,26 @@ export default function AdminRolesPage() {
                   </TableCell>
                 </TableRow>
               ))}
+              {!total && (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                    No roles yet.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
+          <TablePagination
+            className="pt-4"
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            from={from}
+            to={to}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
         </CardContent>
       </Card>
 

@@ -1,7 +1,7 @@
 package lk.weddingplanner.api.vendor;
 
 import jakarta.validation.Valid;
-import java.util.List;
+import lk.weddingplanner.api.common.PageResponse;
 import lk.weddingplanner.api.security.UserPrincipal;
 import lk.weddingplanner.api.vendor.dto.UpsertPaymentRequest;
 import lk.weddingplanner.api.vendor.dto.UpsertVendorRequest;
@@ -29,12 +29,14 @@ public class VendorController {
     private final VendorService vendorService;
 
     @GetMapping
-    public List<VendorResponse> list(
+    public PageResponse<VendorResponse> list(
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable Long weddingId,
             @RequestParam(required = false) String category,
-            @RequestParam(required = false) String q) {
-        return vendorService.list(principal, weddingId, category, q);
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
+        return vendorService.list(principal, weddingId, category, q, page, size);
     }
 
     @PostMapping

@@ -1,9 +1,9 @@
 package lk.weddingplanner.api.admin;
 
 import jakarta.validation.Valid;
-import java.util.List;
 import lk.weddingplanner.api.admin.dto.RoleResponse;
 import lk.weddingplanner.api.admin.dto.UpsertRoleRequest;
+import lk.weddingplanner.api.common.PageResponse;
 import lk.weddingplanner.api.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -24,8 +25,11 @@ public class AdminRoleController {
     private final AdminRoleService adminRoleService;
 
     @GetMapping
-    public List<RoleResponse> list(@AuthenticationPrincipal UserPrincipal principal) {
-        return adminRoleService.list();
+    public PageResponse<RoleResponse> list(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
+        return adminRoleService.list(page, size);
     }
 
     @PostMapping

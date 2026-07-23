@@ -233,6 +233,41 @@ export type AdminUser = {
   createdAt: string;
 };
 
+export type PageResponse<T> = {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+};
+
+export type PageParams = {
+  page?: number;
+  size?: number;
+};
+
+/** Normalize PageResponse or legacy bare arrays into a content list. */
+export function pageContent<T>(
+  result: PageResponse<T> | T[] | null | undefined
+): T[] {
+  if (Array.isArray(result)) return result;
+  if (result && Array.isArray(result.content)) return result.content;
+  return [];
+}
+
+function toQuery(
+  params?: Record<string, string | number | boolean | undefined | null>
+) {
+  if (!params) return "";
+  const sp = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === null || value === "") continue;
+    sp.set(key, String(value));
+  }
+  const qs = sp.toString();
+  return qs ? `?${qs}` : "";
+}
+
 type ApiError = {
   error?: string;
   message?: string;
@@ -521,8 +556,10 @@ export const api = {
       active: boolean;
     }>("/api/auth/me");
   },
-  listAdminUsers() {
-    return request<AdminUser[]>("/api/admin/users");
+  listAdminUsers(params?: PageParams) {
+    return request<PageResponse<AdminUser>>(
+      `/api/admin/users${toQuery({ page: params?.page, size: params?.size })}`
+    );
   },
   createAdminUser(payload: {
     email: string;
@@ -553,8 +590,10 @@ export const api = {
   deleteAdminUser(id: number) {
     return request<void>(`/api/admin/users/${id}`, { method: "DELETE" });
   },
-  listAdminRoles() {
-    return request<PlatformRole[]>("/api/admin/roles");
+  listAdminRoles(params?: PageParams) {
+    return request<PageResponse<PlatformRole>>(
+      `/api/admin/roles${toQuery({ page: params?.page, size: params?.size })}`
+    );
   },
   createAdminRole(payload: {
     name: string;
@@ -582,8 +621,10 @@ export const api = {
   deleteAdminRole(id: number) {
     return request<void>(`/api/admin/roles/${id}`, { method: "DELETE" });
   },
-  listWeddings() {
-    return request<Wedding[]>("/api/weddings");
+  listWeddings(params?: PageParams) {
+    return request<PageResponse<Wedding>>(
+      `/api/weddings${toQuery({ page: params?.page, size: params?.size })}`
+    );
   },
   createWedding(payload: {
     title: string;
@@ -785,8 +826,13 @@ export const api = {
   listMembers(weddingId: number) {
     return request<WeddingMember[]>(`/api/weddings/${weddingId}/members`);
   },
-  listCrew(weddingId: number) {
-    return request<WeddingMember[]>(`/api/weddings/${weddingId}/crew`);
+  listCrew(weddingId: number, params?: PageParams) {
+    return request<PageResponse<WeddingMember>>(
+      `/api/weddings/${weddingId}/crew${toQuery({
+        page: params?.page,
+        size: params?.size,
+      })}`
+    );
   },
   inviteCrew(
     weddingId: number,
@@ -824,8 +870,13 @@ export const api = {
       method: "DELETE",
     });
   },
-  listTasks(weddingId: number) {
-    return request<ChecklistTask[]>(`/api/weddings/${weddingId}/tasks`);
+  listTasks(weddingId: number, params?: PageParams) {
+    return request<PageResponse<ChecklistTask>>(
+      `/api/weddings/${weddingId}/tasks${toQuery({
+        page: params?.page,
+        size: params?.size,
+      })}`
+    );
   },
   createTask(
     weddingId: number,
@@ -863,13 +914,17 @@ export const api = {
       method: "DELETE",
     });
   },
-  listGuests(weddingId: number, params?: { q?: string; rsvp?: string }) {
-    const search = new URLSearchParams();
-    if (params?.q) search.set("q", params.q);
-    if (params?.rsvp) search.set("rsvp", params.rsvp);
-    const qs = search.toString();
-    return request<Guest[]>(
-      `/api/weddings/${weddingId}/guests${qs ? `?${qs}` : ""}`
+  listGuests(
+    weddingId: number,
+    params?: PageParams & { q?: string; rsvp?: string }
+  ) {
+    return request<PageResponse<Guest>>(
+      `/api/weddings/${weddingId}/guests${toQuery({
+        q: params?.q,
+        rsvp: params?.rsvp,
+        page: params?.page,
+        size: params?.size,
+      })}`
     );
   },
   createGuest(
@@ -1023,13 +1078,17 @@ export const api = {
     }
     return (await res.json()) as { imported: number; skipped: number; message: string };
   },
-  listVendors(weddingId: number, params?: { category?: string; q?: string }) {
-    const search = new URLSearchParams();
-    if (params?.category) search.set("category", params.category);
-    if (params?.q) search.set("q", params.q);
-    const qs = search.toString();
-    return request<WeddingVendor[]>(
-      `/api/weddings/${weddingId}/vendors${qs ? `?${qs}` : ""}`
+  listVendors(
+    weddingId: number,
+    params?: PageParams & { category?: string; q?: string }
+  ) {
+    return request<PageResponse<WeddingVendor>>(
+      `/api/weddings/${weddingId}/vendors${toQuery({
+        category: params?.category,
+        q: params?.q,
+        page: params?.page,
+        size: params?.size,
+      })}`
     );
   },
   createVendor(

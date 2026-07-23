@@ -1,15 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { api, getActiveWeddingId, setActiveWedding, type Wedding } from "@/lib/api";
 import { createWeddingSchema, type CreateWeddingValues } from "@/lib/schemas";
+import { useServerPagination } from "@/hooks/useClientPagination";
 import { toast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { TablePagination } from "@/components/ui/table-pagination";
 import {
   Form,
   FormControl,
@@ -37,19 +39,31 @@ import {
 export default function WeddingsPage() {
   const [weddings, setWeddings] = useState<Wedding[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const {
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    total,
+    from,
+    to,
+    applyPage,
+  } = useServerPagination();
   const form = useForm<CreateWeddingValues>({
     resolver: zodResolver(createWeddingSchema),
     defaultValues: { title: "", weddingDate: "", venue: "" },
   });
 
-  async function load() {
-    const list = await api.listWeddings();
+  const load = useCallback(async () => {
+    const result = await api.listWeddings({ page, size: pageSize });
+    const list = applyPage(result);
     setWeddings(list);
     const activeId = getActiveWeddingId();
     const active = activeId ? list.find((w) => w.id === activeId) : null;
     if (active) setActiveWedding(active);
     else if (list[0] && !activeId) setActiveWedding(list[0]);
-  }
+  }, [page, pageSize, applyPage]);
 
   useEffect(() => {
     load().catch((err) => {
@@ -57,7 +71,7 @@ export default function WeddingsPage() {
       setError(msg);
       toast.error(msg);
     });
-  }, []);
+  }, [load]);
 
   async function onCreate(values: CreateWeddingValues) {
     setError(null);
@@ -155,7 +169,7 @@ export default function WeddingsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-xl">Your weddings</CardTitle>
-          <CardDescription>{weddings.length} total</CardDescription>
+          <CardDescription>{total} total</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
@@ -200,7 +214,7 @@ export default function WeddingsPage() {
                   </TableCell>
                 </TableRow>
               ))}
-              {!weddings.length && (
+              {!total && (
                 <TableRow>
                   <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                     No weddings yet. Create one above.
@@ -209,6 +223,17 @@ export default function WeddingsPage() {
               )}
             </TableBody>
           </Table>
+          <TablePagination
+            className="px-6 pb-4"
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            from={from}
+            to={to}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
         </CardContent>
       </Card>
     </div>

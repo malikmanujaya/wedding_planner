@@ -13,11 +13,13 @@ import {
   type WeddingMember,
 } from "@/lib/api";
 import { taskSchema, type TaskFormValues } from "@/lib/schemas";
+import { useServerPagination } from "@/hooks/useClientPagination";
 import { toast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { TablePagination } from "@/components/ui/table-pagination";
 import {
   Form,
   FormControl,
@@ -81,6 +83,17 @@ export default function TasksPage() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<ChecklistTask | null>(null);
+  const {
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    total,
+    from,
+    to,
+    applyPage,
+  } = useServerPagination();
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
@@ -93,16 +106,19 @@ export default function TasksPage() {
     },
   });
 
-  const load = useCallback(async (id: number) => {
-    const [taskList, memberList] = await Promise.all([
-      api.listTasks(id),
-      api.listMembers(id),
-    ]);
-    setTasks(taskList);
-    setMembers(memberList);
-    const active = getActiveWedding();
-    setWeddingTitle(active?.id === id ? active.title : `Wedding #${id}`);
-  }, []);
+  const load = useCallback(
+    async (id: number) => {
+      const [taskPage, memberList] = await Promise.all([
+        api.listTasks(id, { page, size: pageSize }),
+        api.listMembers(id),
+      ]);
+      setTasks(applyPage(taskPage));
+      setMembers(Array.isArray(memberList) ? memberList : []);
+      const active = getActiveWedding();
+      setWeddingTitle(active?.id === id ? active.title : `Wedding #${id}`);
+    },
+    [page, pageSize, applyPage]
+  );
 
   useEffect(() => {
     const id = getActiveWeddingId();
@@ -226,7 +242,7 @@ export default function TasksPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-xl">Checklist</CardTitle>
-          <CardDescription>{tasks.length} task{tasks.length === 1 ? "" : "s"}</CardDescription>
+          <CardDescription>{total} task{total === 1 ? "" : "s"}</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
@@ -240,7 +256,7 @@ export default function TasksPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tasks.map((task) => (
+              {(tasks ?? []).map((task) => (
                 <TableRow key={task.id}>
                   <TableCell>
                     <div className="font-medium">{task.title}</div>
@@ -281,7 +297,7 @@ export default function TasksPage() {
                   </TableCell>
                 </TableRow>
               ))}
-              {!tasks.length && (
+              {!total && (
                 <TableRow>
                   <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                     No tasks yet. Add your first checklist item.
@@ -290,6 +306,17 @@ export default function TasksPage() {
               )}
             </TableBody>
           </Table>
+          <TablePagination
+            className="px-6 pb-4"
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            from={from}
+            to={to}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
         </CardContent>
       </Card>
 
@@ -370,7 +397,7 @@ export default function TasksPage() {
                     <FormControl>
                       <Select {...field}>
                         <option value="">Unassigned</option>
-                        {members.map((m) => (
+                        {(members ?? []).map((m) => (
                           <option key={m.userId} value={String(m.userId)}>
                             {m.fullName} ({m.role})
                           </option>

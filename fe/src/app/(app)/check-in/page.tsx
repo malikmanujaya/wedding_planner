@@ -7,6 +7,7 @@ import {
   api,
   getActiveWedding,
   getActiveWeddingId,
+  pageContent,
   setActiveWedding,
   type CheckInGuest,
   type Wedding,
@@ -49,7 +50,7 @@ export default function CheckInPage() {
       setWedding(cached);
     } else {
       const weddings = await api.listWeddings();
-      const active = weddings.find((w) => w.id === id) ?? null;
+      const active = pageContent(weddings).find((w) => w.id === id) ?? null;
       if (active) setActiveWedding(active);
       setWedding(active);
     }

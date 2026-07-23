@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2, Pencil, Plus, Store, Trash2, Undo2 } from "lucide-react";
@@ -13,11 +13,13 @@ import {
   type WeddingVendor,
 } from "@/lib/api";
 import { vendorSchema, type VendorFormValues } from "@/lib/schemas";
+import { useServerPagination } from "@/hooks/useClientPagination";
 import { toast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { TablePagination } from "@/components/ui/table-pagination";
 import {
   Form,
   FormControl,
@@ -165,25 +167,46 @@ export default function VendorsPage() {
   const [editing, setEditing] = useState<WeddingVendor | null>(null);
   const [paymentsVendor, setPaymentsVendor] = useState<WeddingVendor | null>(null);
   const [paymentBusy, setPaymentBusy] = useState<number | null>(null);
+  const qRef = useRef(q);
+  const categoryRef = useRef(category);
+  qRef.current = q;
+  categoryRef.current = category;
+  const {
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    total,
+    from,
+    to,
+    applyPage,
+  } = useServerPagination();
 
   const form = useForm<VendorFormValues>({
     resolver: zodResolver(vendorSchema),
     defaultValues: emptyForm(),
   });
 
-  const load = useCallback(async (id: number, query = "", cat = "") => {
-    const list = await api.listVendors(id, {
-      q: query || undefined,
-      category: cat || undefined,
-    });
-    setVendors(list);
-    const active = getActiveWedding();
-    setWeddingTitle(active?.id === id ? active.title : `Wedding #${id}`);
-    setPaymentsVendor((prev) => {
-      if (!prev) return prev;
-      return list.find((v) => v.id === prev.id) ?? prev;
-    });
-  }, []);
+  const load = useCallback(
+    async (id: number) => {
+      const result = await api.listVendors(id, {
+        q: qRef.current || undefined,
+        category: categoryRef.current || undefined,
+        page,
+        size: pageSize,
+      });
+      const list = applyPage(result);
+      setVendors(list);
+      const active = getActiveWedding();
+      setWeddingTitle(active?.id === id ? active.title : `Wedding #${id}`);
+      setPaymentsVendor((prev) => {
+        if (!prev) return prev;
+        return list.find((v) => v.id === prev.id) ?? prev;
+      });
+    },
+    [page, pageSize, applyPage]
+  );
 
   useEffect(() => {
     const id = getActiveWeddingId();
@@ -200,6 +223,19 @@ export default function VendorsPage() {
       })
       .finally(() => setLoading(false));
   }, [load]);
+
+  function applyFilters() {
+    if (!weddingId) return;
+    if (page !== 1) {
+      setPage(1);
+      return;
+    }
+    load(weddingId).catch((err) => {
+      const msg = err instanceof Error ? err.message : "Failed to load";
+      setError(msg);
+      toast.error(msg);
+    });
+  }
 
   function openCreate() {
     setEditing(null);
@@ -358,7 +394,7 @@ export default function VendorsPage() {
               Vendor list
             </CardTitle>
             <CardDescription>
-              {vendors.length} vendor{vendors.length === 1 ? "" : "s"} · advance + remaining due
+              {total} vendor{total === 1 ? "" : "s"} · advance + remaining due
               dates
             </CardDescription>
           </div>
@@ -381,10 +417,7 @@ export default function VendorsPage() {
                 </option>
               ))}
             </Select>
-            <Button
-              variant="secondary"
-              onClick={() => weddingId && load(weddingId, q, category)}
-            >
+            <Button variant="secondary" onClick={applyFilters}>
               Apply
             </Button>
           </div>
@@ -464,7 +497,7 @@ export default function VendorsPage() {
                   </TableCell>
                 </TableRow>
               ))}
-              {!vendors.length && (
+              {!total && (
                 <TableRow>
                   <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
                     No vendors yet. Add DJ, Band, Ashtaka, and set advance + remaining dues.
@@ -473,6 +506,17 @@ export default function VendorsPage() {
               )}
             </TableBody>
           </Table>
+          <TablePagination
+            className="px-6 pb-4"
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            from={from}
+            to={to}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
         </CardContent>
       </Card>
 

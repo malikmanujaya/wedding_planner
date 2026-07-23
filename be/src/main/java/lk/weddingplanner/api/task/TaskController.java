@@ -1,7 +1,7 @@
 package lk.weddingplanner.api.task;
 
 import jakarta.validation.Valid;
-import java.util.List;
+import lk.weddingplanner.api.common.PageResponse;
 import lk.weddingplanner.api.security.UserPrincipal;
 import lk.weddingplanner.api.task.dto.TaskResponse;
 import lk.weddingplanner.api.task.dto.UpsertTaskRequest;
@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,9 +27,12 @@ public class TaskController {
     private final TaskService taskService;
 
     @GetMapping
-    public List<TaskResponse> list(
-            @AuthenticationPrincipal UserPrincipal principal, @PathVariable Long weddingId) {
-        return taskService.list(principal, weddingId);
+    public PageResponse<TaskResponse> list(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long weddingId,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
+        return taskService.list(principal, weddingId, page, size);
     }
 
     @PostMapping

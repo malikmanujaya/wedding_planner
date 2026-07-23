@@ -12,12 +12,14 @@ import {
   type Guest,
 } from "@/lib/api";
 import { guestSchema, type GuestFormValues } from "@/lib/schemas";
+import { useServerPagination } from "@/hooks/useClientPagination";
 import { toast } from "@/components/ui/toast";
 import { QrCodeImage } from "@/components/QrCodeImage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { TablePagination } from "@/components/ui/table-pagination";
 import {
   Form,
   FormControl,
@@ -100,23 +102,41 @@ export default function GuestsPage() {
   const [inviteGuest, setInviteGuest] = useState<Guest | null>(null);
   const [inviteBusy, setInviteBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const qRef = useRef(q);
+  const rsvpFilterRef = useRef(rsvpFilter);
+  qRef.current = q;
+  rsvpFilterRef.current = rsvpFilter;
+  const {
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    total,
+    from,
+    to,
+    applyPage,
+  } = useServerPagination();
 
   const form = useForm<GuestFormValues>({
     resolver: zodResolver(guestSchema),
     defaultValues: emptyForm(),
   });
 
-  const load = useCallback(async (id: number, query = "", rsvp = "") => {
-    const list = await api.listGuests(id, {
-      q: query || undefined,
-      rsvp: rsvp || undefined,
-    });
-    setGuests(list);
-    const active = getActiveWedding();
-    setWeddingTitle(
-      active?.id === id ? active.title : `Wedding #${id}`
-    );
-  }, []);
+  const load = useCallback(
+    async (id: number) => {
+      const result = await api.listGuests(id, {
+        q: qRef.current || undefined,
+        rsvp: rsvpFilterRef.current || undefined,
+        page,
+        size: pageSize,
+      });
+      setGuests(applyPage(result));
+      const active = getActiveWedding();
+      setWeddingTitle(active?.id === id ? active.title : `Wedding #${id}`);
+    },
+    [page, pageSize, applyPage]
+  );
 
   useEffect(() => {
     const id = getActiveWeddingId();
@@ -133,6 +153,19 @@ export default function GuestsPage() {
       })
       .finally(() => setLoading(false));
   }, [load]);
+
+  function applyFilters() {
+    if (!weddingId) return;
+    if (page !== 1) {
+      setPage(1);
+      return;
+    }
+    load(weddingId).catch((err) => {
+      const msg = err instanceof Error ? err.message : "Failed to load";
+      setError(msg);
+      toast.error(msg);
+    });
+  }
 
   const counts = useMemo(() => {
     const base = { PENDING: 0, ACCEPTED: 0, DECLINED: 0, MAYBE: 0 };
@@ -385,7 +418,7 @@ export default function GuestsPage() {
         <CardHeader className="gap-4 space-y-0 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <CardTitle className="text-xl">Guest list</CardTitle>
-            <CardDescription>{guests.length} shown</CardDescription>
+            <CardDescription>{total} shown</CardDescription>
           </div>
           <div className="flex flex-wrap gap-2">
             <Input
@@ -405,10 +438,7 @@ export default function GuestsPage() {
               <option value="DECLINED">Declined</option>
               <option value="MAYBE">Maybe</option>
             </Select>
-            <Button
-              variant="secondary"
-              onClick={() => weddingId && load(weddingId, q, rsvpFilter)}
-            >
+            <Button variant="secondary" onClick={applyFilters}>
               Apply
             </Button>
           </div>
@@ -491,7 +521,7 @@ export default function GuestsPage() {
                   </TableCell>
                 </TableRow>
               ))}
-              {!guests.length && (
+              {!total && (
                 <TableRow>
                   <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
                     No guests yet. Add one or import a CSV.
@@ -500,6 +530,17 @@ export default function GuestsPage() {
               )}
             </TableBody>
           </Table>
+          <TablePagination
+            className="px-6 pb-4"
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            from={from}
+            to={to}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
         </CardContent>
       </Card>
 

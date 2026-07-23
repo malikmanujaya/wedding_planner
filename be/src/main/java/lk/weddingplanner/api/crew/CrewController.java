@@ -1,7 +1,7 @@
 package lk.weddingplanner.api.crew;
 
 import jakarta.validation.Valid;
-import java.util.List;
+import lk.weddingplanner.api.common.PageResponse;
 import lk.weddingplanner.api.crew.dto.InviteCrewRequest;
 import lk.weddingplanner.api.crew.dto.InviteCrewResponse;
 import lk.weddingplanner.api.crew.dto.UpdateCrewRequest;
@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,9 +29,12 @@ public class CrewController {
     private final CrewService crewService;
 
     @GetMapping
-    public List<WeddingMemberResponse> list(
-            @AuthenticationPrincipal UserPrincipal principal, @PathVariable Long weddingId) {
-        return crewService.list(principal, weddingId);
+    public PageResponse<WeddingMemberResponse> list(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long weddingId,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
+        return crewService.list(principal, weddingId, page, size);
     }
 
     @PostMapping

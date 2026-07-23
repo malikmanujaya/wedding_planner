@@ -5,6 +5,8 @@ import java.util.Locale;
 import lk.weddingplanner.api.admin.dto.RoleResponse;
 import lk.weddingplanner.api.admin.dto.UpsertRoleRequest;
 import lk.weddingplanner.api.common.ApiException;
+import lk.weddingplanner.api.common.PageRequestParams;
+import lk.weddingplanner.api.common.PageResponse;
 import lk.weddingplanner.api.domain.Role;
 import lk.weddingplanner.api.domain.SystemRoles;
 import lk.weddingplanner.api.repository.RoleRepository;
@@ -22,10 +24,12 @@ public class AdminRoleService {
     private final RoleRepository roleRepository;
 
     @Transactional(readOnly = true)
-    public List<RoleResponse> list() {
-        return roleRepository.findAllByOrderBySystemRoleDescNameAsc().stream()
-                .map(this::toResponse)
-                .toList();
+    public PageResponse<RoleResponse> list(Integer page, Integer size) {
+        List<RoleResponse> all =
+                roleRepository.findAllByOrderBySystemRoleDescNameAsc().stream()
+                        .map(this::toResponse)
+                        .toList();
+        return PageRequestParams.of(page, size).paginate(all);
     }
 
     @Transactional

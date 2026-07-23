@@ -3,6 +3,7 @@ package lk.weddingplanner.api.guest;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
+import lk.weddingplanner.api.common.PageResponse;
 import lk.weddingplanner.api.domain.RsvpStatus;
 import lk.weddingplanner.api.guest.dto.GuestImportResult;
 import lk.weddingplanner.api.guest.dto.GuestResponse;
@@ -34,12 +35,14 @@ public class GuestController {
     private final GuestService guestService;
 
     @GetMapping
-    public List<GuestResponse> list(
+    public PageResponse<GuestResponse> list(
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable Long weddingId,
             @RequestParam(required = false) String q,
-            @RequestParam(required = false) String rsvp) {
-        return guestService.list(principal, weddingId, q, rsvp);
+            @RequestParam(required = false) String rsvp,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
+        return guestService.list(principal, weddingId, q, rsvp, page, size);
     }
 
     @PostMapping

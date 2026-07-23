@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import lk.weddingplanner.api.common.ApiException;
+import lk.weddingplanner.api.common.PageRequestParams;
+import lk.weddingplanner.api.common.PageResponse;
 import lk.weddingplanner.api.domain.Guest;
 import lk.weddingplanner.api.domain.RsvpStatus;
 import lk.weddingplanner.api.domain.Wedding;
@@ -36,16 +38,19 @@ public class GuestService {
     private final InviteService inviteService;
 
     @Transactional(readOnly = true)
-    public List<GuestResponse> list(UserPrincipal principal, Long weddingId, String q, String rsvp) {
+    public PageResponse<GuestResponse> list(
+            UserPrincipal principal, Long weddingId, String q, String rsvp, Integer page, Integer size) {
         weddingAccessService.requireMemberWedding(principal, weddingId);
         String query = q != null ? q.trim().toLowerCase(Locale.ROOT) : "";
         RsvpStatus statusFilter = parseStatusOrNull(rsvp);
 
-        return guestRepository.findAllByWeddingId(weddingId).stream()
-                .filter(g -> statusFilter == null || g.getRsvpStatus() == statusFilter)
-                .filter(g -> query.isEmpty() || matchesQuery(g, query))
-                .map(this::toResponse)
-                .toList();
+        List<GuestResponse> all =
+                guestRepository.findAllByWeddingId(weddingId).stream()
+                        .filter(g -> statusFilter == null || g.getRsvpStatus() == statusFilter)
+                        .filter(g -> query.isEmpty() || matchesQuery(g, query))
+                        .map(this::toResponse)
+                        .toList();
+        return PageRequestParams.of(page, size).paginate(all);
     }
 
     @Transactional

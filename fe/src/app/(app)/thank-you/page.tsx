@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Copy, Mail, Save } from "lucide-react";
-import { api, getActiveWeddingId, mediaUrl, type Guest } from "@/lib/api";
+import { api, getActiveWeddingId, mediaUrl, pageContent, type Guest } from "@/lib/api";
 import { toast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -42,7 +42,7 @@ export default function ThankYouPage() {
     }
     setWeddingId(id);
     Promise.all([api.getThankYouCard(id), api.listGuests(id)])
-      .then(([card, guestList]) => {
+      .then(([card, guestPage]) => {
         if (card) {
           setHasCard(true);
           setTemplateKey(card.templateKey);
@@ -51,7 +51,7 @@ export default function ThankYouPage() {
           setImageUrl(card.imageUrl ?? "");
           setDesignedCardUrl(card.designedCardUrl ?? "");
         }
-        setGuests(guestList);
+        setGuests(pageContent(guestPage));
       })
       .catch((err) => toast.error(err instanceof Error ? err.message : "Failed to load"))
       .finally(() => setLoading(false));

@@ -6,6 +6,8 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 import java.time.LocalDate;
 import lk.weddingplanner.api.common.ApiException;
+import lk.weddingplanner.api.common.PageRequestParams;
+import lk.weddingplanner.api.common.PageResponse;
 import lk.weddingplanner.api.domain.ChecklistTask;
 import lk.weddingplanner.api.domain.MembershipRole;
 import lk.weddingplanner.api.domain.User;
@@ -52,11 +54,13 @@ public class WeddingService {
     private final UserRepository userRepository;
     private final ChecklistTaskRepository checklistTaskRepository;
 
-    @Transactional
-    public List<WeddingResponse> listMine(UserPrincipal principal) {
-        return membershipRepository.findAllByUserIdWithWedding(principal.getId()).stream()
-                .map(this::toResponse)
-                .toList();
+    @Transactional(readOnly = true)
+    public PageResponse<WeddingResponse> listMine(UserPrincipal principal, Integer page, Integer size) {
+        List<WeddingResponse> all =
+                membershipRepository.findAllByUserIdWithWedding(principal.getId()).stream()
+                        .map(this::toResponse)
+                        .toList();
+        return PageRequestParams.of(page, size).paginate(all);
     }
 
     @Transactional

@@ -2,6 +2,7 @@ package lk.weddingplanner.api.wedding;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import lk.weddingplanner.api.common.PageResponse;
 import lk.weddingplanner.api.security.UserPrincipal;
 import lk.weddingplanner.api.wedding.dto.CreateWeddingRequest;
 import lk.weddingplanner.api.wedding.dto.WeddingMemberResponse;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -23,8 +25,11 @@ public class WeddingController {
     private final WeddingService weddingService;
 
     @GetMapping
-    public List<WeddingResponse> list(@AuthenticationPrincipal UserPrincipal principal) {
-        return weddingService.listMine(principal);
+    public PageResponse<WeddingResponse> list(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
+        return weddingService.listMine(principal, page, size);
     }
 
     @PostMapping

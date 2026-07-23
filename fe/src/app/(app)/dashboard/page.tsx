@@ -6,6 +6,7 @@ import {
   api,
   getActiveWeddingId,
   getStoredUser,
+  pageContent,
   setActiveWedding,
   type Wedding,
 } from "@/lib/api";
@@ -29,7 +30,8 @@ export default function DashboardPage() {
     if (user) setUserName(user.fullName.split(" ")[0] ?? "");
     api
       .listWeddings()
-      .then((list) => {
+      .then((r) => {
+        const list = pageContent(r);
         setWeddings(list);
         if (list.length && !getActiveWeddingId()) {
           setActiveWedding(list[0]);

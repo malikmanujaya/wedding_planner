@@ -9,6 +9,7 @@ import {
   api,
   getActiveWedding,
   getActiveWeddingId,
+  pageContent,
   setActiveWedding,
   type Wedding,
   type WeddingMember,
@@ -19,11 +20,13 @@ import {
   type InviteCrewValues,
   type UpdateCrewValues,
 } from "@/lib/schemas";
+import { useServerPagination } from "@/hooks/useClientPagination";
 import { toast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { TablePagination } from "@/components/ui/table-pagination";
 import {
   Form,
   FormControl,
@@ -66,6 +69,17 @@ export default function CrewPage() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editing, setEditing] = useState<WeddingMember | null>(null);
+  const {
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    total,
+    from,
+    to,
+    applyPage,
+  } = useServerPagination();
 
   const inviteForm = useForm<InviteCrewValues>({
     resolver: zodResolver(inviteCrewSchema),
@@ -82,19 +96,22 @@ export default function CrewPage() {
     defaultValues: { role: "CREW", responsibilities: "" },
   });
 
-  const load = useCallback(async (id: number) => {
-    const cached = getActiveWedding();
-    const crewList = await api.listCrew(id);
-    setCrew(crewList);
-    if (cached?.id === id) {
-      setWedding(cached);
-      return;
-    }
-    const weddings = await api.listWeddings();
-    const active = weddings.find((w) => w.id === id) ?? null;
-    if (active) setActiveWedding(active);
-    setWedding(active);
-  }, []);
+  const load = useCallback(
+    async (id: number) => {
+      const cached = getActiveWedding();
+      const crewPage = await api.listCrew(id, { page, size: pageSize });
+      setCrew(applyPage(crewPage));
+      if (cached?.id === id) {
+        setWedding(cached);
+        return;
+      }
+      const weddings = await api.listWeddings();
+      const active = pageContent(weddings).find((w) => w.id === id) ?? null;
+      if (active) setActiveWedding(active);
+      setWedding(active);
+    },
+    [page, pageSize, applyPage]
+  );
 
   useEffect(() => {
     const id = getActiveWeddingId();
@@ -267,7 +284,7 @@ export default function CrewPage() {
             Team
           </CardTitle>
           <CardDescription>
-            {crew.length} member{crew.length === 1 ? "" : "s"}
+            {total} member{total === 1 ? "" : "s"}
             {wedding?.inviteCode ? ` · invite code ${wedding.inviteCode}` : ""}
           </CardDescription>
         </CardHeader>
@@ -317,7 +334,7 @@ export default function CrewPage() {
                   </TableCell>
                 </TableRow>
               ))}
-              {!crew.length && (
+              {!total && (
                 <TableRow>
                   <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                     No crew yet.
@@ -326,6 +343,17 @@ export default function CrewPage() {
               )}
             </TableBody>
           </Table>
+          <TablePagination
+            className="px-6 pb-4"
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            from={from}
+            to={to}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
         </CardContent>
       </Card>
 

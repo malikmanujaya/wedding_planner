@@ -18,6 +18,7 @@ import {
   api,
   getActiveWedding,
   getActiveWeddingId,
+  pageContent,
   type Guest,
 } from "@/lib/api";
 import {
@@ -77,13 +78,13 @@ export default function SeatingPage() {
   const canvasRef = useRef<SeatingCanvasHandle>(null);
 
   const load = useCallback(async (id: number) => {
-    const [seating, guestList] = await Promise.all([
+    const [seating, guestPage] = await Promise.all([
       api.getSeating(id),
       api.listGuests(id),
     ]);
     setPlan(normalizePlan(seating.plan));
     setVersion(seating.version);
-    setGuests(guestList);
+    setGuests(pageContent(guestPage));
     const active = getActiveWedding();
     setWeddingTitle(active?.id === id ? active.title : `Wedding #${id}`);
   }, []);
@@ -230,7 +231,7 @@ export default function SeatingPage() {
       setPlan(normalizePlan(res.plan));
       setVersion(res.version);
       const guestList = await api.listGuests(weddingId);
-      setGuests(guestList);
+      setGuests(pageContent(guestList));
       toast.success("Seating plan saved");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Save failed";

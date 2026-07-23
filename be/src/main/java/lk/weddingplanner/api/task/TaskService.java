@@ -3,6 +3,8 @@ package lk.weddingplanner.api.task;
 import java.time.Instant;
 import java.util.List;
 import lk.weddingplanner.api.common.ApiException;
+import lk.weddingplanner.api.common.PageRequestParams;
+import lk.weddingplanner.api.common.PageResponse;
 import lk.weddingplanner.api.domain.ChecklistTask;
 import lk.weddingplanner.api.domain.TaskStatus;
 import lk.weddingplanner.api.domain.User;
@@ -30,9 +32,12 @@ public class TaskService {
     private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
-    public List<TaskResponse> list(UserPrincipal principal, Long weddingId) {
+    public PageResponse<TaskResponse> list(
+            UserPrincipal principal, Long weddingId, Integer page, Integer size) {
         weddingAccessService.requireMemberWedding(principal, weddingId);
-        return taskRepository.findAllByWeddingId(weddingId).stream().map(this::toResponse).toList();
+        List<TaskResponse> all =
+                taskRepository.findAllByWeddingId(weddingId).stream().map(this::toResponse).toList();
+        return PageRequestParams.of(page, size).paginate(all);
     }
 
     @Transactional

@@ -8,6 +8,8 @@ import lk.weddingplanner.api.admin.dto.AdminUserResponse;
 import lk.weddingplanner.api.admin.dto.CreateUserRequest;
 import lk.weddingplanner.api.admin.dto.UpdateUserRequest;
 import lk.weddingplanner.api.common.ApiException;
+import lk.weddingplanner.api.common.PageRequestParams;
+import lk.weddingplanner.api.common.PageResponse;
 import lk.weddingplanner.api.domain.Role;
 import lk.weddingplanner.api.domain.SystemRoles;
 import lk.weddingplanner.api.domain.User;
@@ -31,9 +33,11 @@ public class AdminUserService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
-    public List<AdminUserResponse> list(UserPrincipal principal) {
+    public PageResponse<AdminUserResponse> list(UserPrincipal principal, Integer page, Integer size) {
         requireAdmin(principal);
-        return userRepository.findAllWithRoles().stream().map(this::toResponse).toList();
+        List<AdminUserResponse> all =
+                userRepository.findAllWithRoles().stream().map(this::toResponse).toList();
+        return PageRequestParams.of(page, size).paginate(all);
     }
 
     @Transactional(readOnly = true)

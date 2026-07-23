@@ -5,6 +5,8 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.UUID;
 import lk.weddingplanner.api.common.ApiException;
+import lk.weddingplanner.api.common.PageRequestParams;
+import lk.weddingplanner.api.common.PageResponse;
 import lk.weddingplanner.api.crew.dto.InviteCrewRequest;
 import lk.weddingplanner.api.crew.dto.InviteCrewResponse;
 import lk.weddingplanner.api.crew.dto.UpdateCrewRequest;
@@ -43,11 +45,14 @@ public class CrewService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
-    public List<WeddingMemberResponse> list(UserPrincipal principal, Long weddingId) {
+    public PageResponse<WeddingMemberResponse> list(
+            UserPrincipal principal, Long weddingId, Integer page, Integer size) {
         weddingAccessService.requireMembership(principal, weddingId);
-        return membershipRepository.findAllByWeddingIdWithUser(weddingId).stream()
-                .map(this::toMember)
-                .toList();
+        List<WeddingMemberResponse> all =
+                membershipRepository.findAllByWeddingIdWithUser(weddingId).stream()
+                        .map(this::toMember)
+                        .toList();
+        return PageRequestParams.of(page, size).paginate(all);
     }
 
     @Transactional
